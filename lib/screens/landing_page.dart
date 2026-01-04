@@ -35,12 +35,32 @@ class _LandingPageState extends State<LandingPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
-              const PulsingParticleSphere(
-                size: 200,
-                primaryColor: AppColors.primary,
-                secondaryColor: AppColors.primaryLight,
-                accentColor: AppColors.primaryDark,
-                highlightColor: AppColors.primary,
+              GestureDetector(
+                onTap: () {
+                  // Make sphere responsive to taps - show a brief animation or feedback
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Ready to transform your fitness journey?',
+                        style: AppStyles.mainText().copyWith(fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                      backgroundColor: AppColors.primaryLight.withOpacity(0.9),
+                      duration: const Duration(milliseconds: 1500),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                },
+                child: const PulsingParticleSphere(
+                  size: 200,
+                  primaryColor: AppColors.primary,
+                  secondaryColor: AppColors.primaryLight,
+                  accentColor: AppColors.primaryDark,
+                  highlightColor: AppColors.primary,
+                ),
               ),
               const SizedBox(height: 40),
               Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../styles.dart';
 import '../services/user_service.dart';
 import 'main_navigation_screen.dart';
@@ -33,7 +34,7 @@ class _PaywallScreenState extends State<PaywallScreen> with SingleTickerProvider
     
     _priceAnimation = Tween<double>(
       begin: 450.0,
-      end: 9,
+      end: 10,
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOutCubic,
@@ -163,6 +164,48 @@ class _PaywallScreenState extends State<PaywallScreen> with SingleTickerProvider
     }
   }
 
+  // TODO: Replace these URLs with your actual legal document URLs
+  static const String _privacyPolicyUrl = 'https://romantic-okapi-579.notion.site/Echelon-Privacy-Policy-Terms-of-Service-2de17c99989380ce8cf4e4729a0ac1a6?pvs=74';
+  static const String _termsOfUseUrl = 'https://romantic-okapi-579.notion.site/Echelon-Privacy-Policy-Terms-of-Service-2de17c99989380ce8cf4e4729a0ac1a6?pvs=74';
+
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    final uri = Uri.parse(_privacyPolicyUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Privacy Policy URL not configured',
+              style: AppStyles.mainText().copyWith(fontSize: 14),
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _openTermsOfUse(BuildContext context) async {
+    final uri = Uri.parse(_termsOfUseUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Terms of Use URL not configured',
+              style: AppStyles.mainText().copyWith(fontSize: 14),
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,14 +328,66 @@ class _PaywallScreenState extends State<PaywallScreen> with SingleTickerProvider
                           ),
                         ),
                         
-                        // Terms
-                        Text(
-                          'Auto-renewable. Cancel anytime.',
-                          style: AppStyles.questionSubtext().copyWith(
-                            fontSize: 9,
-                            color: AppColors.accent.withOpacity(0.5),
+                        // Terms and Legal Links
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Column(
+                            children: [
+                              Text(
+                                'Subscriptions auto-renew until cancelled.',
+                                style: AppStyles.questionSubtext().copyWith(
+                                  fontSize: 9,
+                                  color: AppColors.accent.withOpacity(0.5),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => _openPrivacyPolicy(context),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      'Privacy Policy',
+                                      style: AppStyles.questionSubtext().copyWith(
+                                        fontSize: 9,
+                                        color: AppColors.accent.withOpacity(0.6),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    ' • ',
+                                    style: AppStyles.questionSubtext().copyWith(
+                                      fontSize: 9,
+                                      color: AppColors.accent.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _openTermsOfUse(context),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      'Terms of Use',
+                                      style: AppStyles.questionSubtext().copyWith(
+                                        fontSize: 9,
+                                        color: AppColors.accent.withOpacity(0.6),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -506,6 +601,8 @@ class _PaywallScreenState extends State<PaywallScreen> with SingleTickerProvider
     String? badge,
   }) {
     final isSelected = _selectedPackage == package;
+    final isAnnual = title.toLowerCase().contains('year');
+    final duration = isAnnual ? '12 months' : '1 month';
     
     return GestureDetector(
       onTap: () {
@@ -552,6 +649,17 @@ class _PaywallScreenState extends State<PaywallScreen> with SingleTickerProvider
                     style: AppStyles.mainText().copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 2),
+                  
+                  // Duration
+                  Text(
+                    duration,
+                    style: AppStyles.questionSubtext().copyWith(
+                      fontSize: 10,
+                      color: AppColors.accent.withOpacity(0.6),
                     ),
                   ),
                 ],
