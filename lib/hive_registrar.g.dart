@@ -4,6 +4,7 @@
 
 import 'package:hive_ce/hive_ce.dart';
 import 'package:echelon/models/auth_data.dart';
+import 'package:echelon/models/class_entry.dart';
 import 'package:echelon/models/daily_nutrition.dart';
 import 'package:echelon/models/exercise.dart';
 import 'package:echelon/models/exercise_set.dart';
@@ -15,6 +16,7 @@ import 'package:echelon/models/workout_split.dart';
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(AuthDataAdapter());
+    registerAdapter(ClassEntryAdapter());
     registerAdapter(DailyNutritionAdapter());
     registerAdapter(ExerciseAdapter());
     registerAdapter(ExerciseSetAdapter());
@@ -28,6 +30,7 @@ extension HiveRegistrar on HiveInterface {
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
     registerAdapter(AuthDataAdapter());
+    registerAdapter(ClassEntryAdapter());
     registerAdapter(DailyNutritionAdapter());
     registerAdapter(ExerciseAdapter());
     registerAdapter(ExerciseSetAdapter());

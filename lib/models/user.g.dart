@@ -27,13 +27,16 @@ class UserAdapter extends TypeAdapter<User> {
       longestStreak: fields[7] == null ? 0 : (fields[7] as num).toInt(),
       nutritionGoal: fields[8] as String?,
       targetCalories: (fields[9] as num?)?.toInt(),
+      customProtein: (fields[10] as num?)?.toDouble(),
+      customCarbs: (fields[11] as num?)?.toDouble(),
+      customFats: (fields[12] as num?)?.toDouble(),
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.gender)
       ..writeByte(1)
@@ -53,7 +56,13 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(8)
       ..write(obj.nutritionGoal)
       ..writeByte(9)
-      ..write(obj.targetCalories);
+      ..write(obj.targetCalories)
+      ..writeByte(10)
+      ..write(obj.customProtein)
+      ..writeByte(11)
+      ..write(obj.customCarbs)
+      ..writeByte(12)
+      ..write(obj.customFats);
   }
 
   @override

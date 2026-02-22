@@ -80,6 +80,17 @@ class UserService {
     await saveUser(user);
   }
 
+  // Update custom macro targets
+  static Future<void> updateCustomMacros({
+    double? protein,
+    double? carbs,
+    double? fats,
+  }) async {
+    final user = getCurrentUser();
+    user.updateCustomMacros(protein: protein, carbs: carbs, fats: fats);
+    await saveUser(user);
+  }
+
   // Get nutrition goals
   static Map<String, dynamic>? getNutritionGoals() {
     final user = getCurrentUser();

@@ -7,7 +7,6 @@ import '../stores/nutrition_store.dart';
 import '../services/coach_chat_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/pulsing_particle_sphere.dart';
-import '../widgets/typewriter_markdown.dart';
 
 class CoachChatScreen extends StatefulWidget {
   final VoidCallback? onNavigateBack;
@@ -21,6 +20,7 @@ class CoachChatScreen extends StatefulWidget {
 class _CoachChatScreenState extends State<CoachChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final Set<String> _animatedMessageIds = {};
 
   @override
   void dispose() {
@@ -380,8 +380,56 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, bool shouldTypewrite) {
-    return Padding(
+  MarkdownStyleSheet get _assistantMarkdownStyle => MarkdownStyleSheet(
+        p: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          color: AppColors.accent,
+        ),
+        strong: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: AppColors.accent,
+        ),
+        em: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          fontStyle: FontStyle.italic,
+          color: AppColors.accent,
+        ),
+        code: AppStyles.mainText().copyWith(
+          fontSize: 14,
+          fontFamily: 'monospace',
+          color: AppColors.primaryLight,
+          backgroundColor: AppColors.background,
+        ),
+        listBullet: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          color: AppColors.primaryLight,
+        ),
+      );
+
+  Widget _buildMessageBubble(ChatMessage message, bool isNewAssistantMessage) {
+    final shouldFadeIn = isNewAssistantMessage && !_animatedMessageIds.contains(message.id);
+    if (shouldFadeIn) {
+      _animatedMessageIds.add(message.id);
+    }
+
+    Widget content;
+    if (message.isUser) {
+      content = Text(
+        message.text,
+        style: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          color: AppColors.background,
+        ),
+      );
+    } else {
+      content = MarkdownBody(
+        data: message.text,
+        styleSheet: _assistantMarkdownStyle,
+      );
+    }
+
+    Widget bubble = Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment:
@@ -400,73 +448,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                       borderRadius: BorderRadius.circular(16),
                     )
                   : null,
-              child: message.isUser
-                  ? Text(
-                      message.text,
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 15,
-                        color: AppColors.background,
-                      ),
-                    )
-                  : (shouldTypewrite
-                      ? TypewriterMarkdown(
-                          data: message.text,
-                          styleSheet: MarkdownStyleSheet(
-                            p: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              color: AppColors.accent,
-                            ),
-                            strong: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
-                            ),
-                            em: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              fontStyle: FontStyle.italic,
-                              color: AppColors.accent,
-                            ),
-                            code: AppStyles.mainText().copyWith(
-                              fontSize: 14,
-                              fontFamily: 'monospace',
-                              color: AppColors.primaryLight,
-                              backgroundColor: AppColors.background,
-                            ),
-                            listBullet: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              color: AppColors.primaryLight,
-                            ),
-                          ),
-                        )
-                      : MarkdownBody(
-                          data: message.text,
-                          styleSheet: MarkdownStyleSheet(
-                            p: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              color: AppColors.accent,
-                            ),
-                            strong: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accent,
-                            ),
-                            em: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              fontStyle: FontStyle.italic,
-                              color: AppColors.accent,
-                            ),
-                            code: AppStyles.mainText().copyWith(
-                              fontSize: 14,
-                              fontFamily: 'monospace',
-                              color: AppColors.primaryLight,
-                              backgroundColor: AppColors.background,
-                            ),
-                            listBullet: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              color: AppColors.primaryLight,
-                            ),
-                          ),
-                        )),
+              child: content,
             ),
           ),
           if (message.isUser)
@@ -487,6 +469,49 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
         ],
       ),
     );
+
+    if (shouldFadeIn) {
+      return _FadeInWidget(key: ValueKey('fade_${message.id}'), child: bubble);
+    }
+
+    return bubble;
+  }
+}
+
+class _FadeInWidget extends StatefulWidget {
+  final Widget child;
+
+  const _FadeInWidget({super.key, required this.child});
+
+  @override
+  State<_FadeInWidget> createState() => _FadeInWidgetState();
+}
+
+class _FadeInWidgetState extends State<_FadeInWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(opacity: _opacity, child: widget.child);
   }
 }
 

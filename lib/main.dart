@@ -17,12 +17,14 @@ import 'models/food_entry.dart';
 import 'models/daily_nutrition.dart';
 import 'models/auth_data.dart';
 import 'models/workout_split.dart';
+import 'models/class_entry.dart';
 import 'services/user_service.dart';
 import 'services/workout_service.dart';
 import 'services/nutrition_service.dart';
 import 'services/auth_service.dart';
 import 'services/workout_audio_cache.dart';
 import 'services/split_service.dart';
+import 'services/class_service.dart';
 import 'stores/active_workout_store.dart';
 import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
@@ -46,11 +48,13 @@ void main() async {
   Hive.registerAdapter(DailyNutritionAdapter());
   Hive.registerAdapter(AuthDataAdapter());
   Hive.registerAdapter(WorkoutSplitAdapter());
+  Hive.registerAdapter(ClassEntryAdapter());
   
   // Initialize services
   await UserService.init();
   await WorkoutService.init();
   await SplitService.init();
+  await ClassService.init();
   
   final nutritionService = NutritionService();
   await nutritionService.initialize();

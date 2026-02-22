@@ -3,12 +3,13 @@ import '../styles.dart';
 import '../services/workout_service.dart';
 import '../services/user_service.dart';
 import '../services/split_service.dart';
-// import '../services/auth_service.dart';
+import '../services/class_service.dart';
 import '../models/workout.dart';
+import '../models/class_entry.dart';
 import 'workout_detail_screen.dart';
 import 'weekly_calendar_screen.dart';
 import 'all_exercises_progress_screen.dart';
-// import 'package:provider/provider.dart';
+import 'log_class_screen.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -40,6 +41,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Map<String, List<double>> _exerciseVolumeHistory = {}; // exercise -> [volumes over time]
   Map<String, List<DateTime>> _exerciseWorkoutDates = {}; // exercise -> [dates performed]
   Map<String, List<double>> _exerciseMaxWeightHistory = {}; // exercise -> [max weights over time]
+  
+  // Class tracking
+  List<ClassEntry> _recentClasses = [];
+  int _classesThisWeek = 0;
 
   @override
   void initState() {
@@ -49,16 +54,47 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
   void _loadStats() {
     final workouts = WorkoutService.getCompletedWorkouts();
+    final allClasses = ClassService.getAllClasses();
     
-    if (workouts.isEmpty) {
+    if (workouts.isEmpty && allClasses.isEmpty) {
       setState(() {
         _recentWorkouts = [];
+        _recentClasses = [];
       });
       return;
     }
     
-    // Get current streak and update user's longest streak if needed
-    final currentStreak = WorkoutService.getWorkoutStreak();
+    // Get current streak (including class days)
+    final workoutDatesSet = workouts.map((w) => DateTime(
+      w.startTime.year, w.startTime.month, w.startTime.day,
+    )).toSet();
+    final classDatesSet = ClassService.getClassDates();
+    final allTrainingDates = {...workoutDatesSet, ...classDatesSet}.toList()..sort();
+    
+    int currentStreak = 0;
+    if (allTrainingDates.isNotEmpty) {
+      final now = DateTime.now();
+      var checkDate = DateTime(now.year, now.month, now.day);
+      
+      // Check if trained today or yesterday to start the streak
+      if (allTrainingDates.contains(checkDate)) {
+        currentStreak = 1;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        checkDate = checkDate.subtract(const Duration(days: 1));
+        if (allTrainingDates.contains(checkDate)) {
+          currentStreak = 1;
+          checkDate = checkDate.subtract(const Duration(days: 1));
+        }
+      }
+      
+      // Count consecutive days backwards
+      while (allTrainingDates.contains(checkDate)) {
+        currentStreak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      }
+    }
+    
     final user = UserService.getCurrentUser();
     user.updateLongestStreak(currentStreak);
     user.save();
@@ -71,11 +107,24 @@ class _ProgressScreenState extends State<ProgressScreen> {
       w.startTime.isAtSameMomentAs(startOfWeek)
     ).length;
     
-    // Last trained
+    // Classes this week
+    final classesThisWeek = allClasses.where((c) =>
+      c.timestamp.isAfter(startOfWeek) ||
+      c.timestamp.isAtSameMomentAs(startOfWeek)
+    ).length;
+    
+    // Last trained (considering both workouts and classes)
     String lastTrained = '';
-    if (workouts.isNotEmpty) {
-      final lastWorkout = workouts.first;
-      final daysSince = now.difference(lastWorkout.startTime).inDays;
+    DateTime? lastActivity;
+    if (workouts.isNotEmpty) lastActivity = workouts.first.startTime;
+    if (allClasses.isNotEmpty) {
+      final lastClass = allClasses.first.timestamp;
+      if (lastActivity == null || lastClass.isAfter(lastActivity)) {
+        lastActivity = lastClass;
+      }
+    }
+    if (lastActivity != null) {
+      final daysSince = now.difference(lastActivity).inDays;
       if (daysSince == 0) {
         lastTrained = 'Today';
       } else if (daysSince == 1) {
@@ -173,12 +222,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
     }
     
     setState(() {
-      _totalWorkouts = WorkoutService.getTotalWorkoutCount();
+      _totalWorkouts = WorkoutService.getTotalWorkoutCount() + ClassService.getTotalClassCount();
       _currentStreak = currentStreak;
       // _longestStreak = user.longestStreak; // TODO: Will be used for Milestones later
       _recentWorkouts = workouts.take(5).toList();
       
-      _workoutsThisWeek = workoutsThisWeek;
+      _workoutsThisWeek = workoutsThisWeek + classesThisWeek;
+      _classesThisWeek = classesThisWeek;
       _prsThisWeek = prsThisWeek;
       _lastTrained = lastTrained;
       
@@ -192,6 +242,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
       _exerciseVolumeHistory = volumeHistory;
       _exerciseWorkoutDates = workoutDates;
       _exerciseMaxWeightHistory = maxWeightHistory;
+      
+      _recentClasses = allClasses.take(5).toList();
     });
   }
 
@@ -199,7 +251,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _recentWorkouts.isEmpty
+        child: _recentWorkouts.isEmpty && _recentClasses.isEmpty
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -402,18 +454,37 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Recent Workouts
-                  Text(
-                    'Recent Workouts',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                  // Recent Classes
+                  if (_recentClasses.isNotEmpty) ...[
+                    Text(
+                      'Recent Classes',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  ..._buildGroupedWorkoutCards(),
+                    ..._recentClasses.map((entry) => _buildClassCard(entry)),
+
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Recent Workouts
+                  if (_recentWorkouts.isNotEmpty) ...[
+                    Text(
+                      'Recent Workouts',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    ..._buildGroupedWorkoutCards(),
+                  ],
                 ],
               ),
       ),
@@ -438,7 +509,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.primaryLight.withOpacity(0.12),
+          color: Colors.black,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: AppColors.primaryLight.withOpacity(0.25),
@@ -496,6 +567,117 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildClassCard(ClassEntry entry) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => LogClassScreen(existingEntry: entry),
+          ),
+        ).then((result) {
+          if (result == true) _loadStats();
+        });
+      },
+      child: Dismissible(
+        key: Key(entry.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          child: Icon(
+            Icons.delete_outline,
+            color: Colors.red.withOpacity(0.8),
+          ),
+        ),
+        onDismissed: (_) async {
+          await ClassService.deleteClass(entry.id);
+          _loadStats();
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.02),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.06),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  _getClassIcon(entry.className),
+                  color: AppColors.primaryLight,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.className,
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      [
+                        _formatDate(entry.timestamp),
+                        if (entry.durationMinutes != null) entry.durationFormatted,
+                      ].join(' • '),
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 13,
+                        color: AppColors.accent.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (entry.notes != null && entry.notes!.isNotEmpty)
+                Icon(
+                  Icons.notes,
+                  size: 16,
+                  color: AppColors.accent.withOpacity(0.3),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getClassIcon(String className) {
+    switch (className) {
+      case 'Pilates': return Icons.self_improvement;
+      case 'Orange Theory': return Icons.monitor_heart;
+      case 'Yoga': return Icons.spa;
+      case 'Spin': return Icons.pedal_bike;
+      case 'Boxing': return Icons.sports_mma;
+      case 'HIIT': return Icons.bolt;
+      case 'Swimming': return Icons.pool;
+      case 'CrossFit': return Icons.fitness_center;
+      case 'Dance': return Icons.music_note;
+      case 'Martial Arts': return Icons.sports_martial_arts;
+      case 'Running': return Icons.directions_run;
+      default: return Icons.event_available;
+    }
   }
 
   // Group workouts by day and return cards
@@ -566,7 +748,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
               Expanded(
                 child: _buildWeekStatCard(
                   value: '$_workoutsThisWeek',
-                  label: 'Workouts',
+                  label: _classesThisWeek > 0 ? 'Sessions' : 'Workouts',
                   icon: Icons.fitness_center_rounded,
                   color: AppColors.primary,
                 ),

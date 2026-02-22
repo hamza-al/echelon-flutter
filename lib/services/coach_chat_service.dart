@@ -5,6 +5,7 @@ import '../stores/nutrition_store.dart';
 import '../services/workout_service.dart';
 import '../services/user_service.dart';
 import '../services/auth_service.dart';
+import '../services/class_service.dart';
 import '../utils/macro_calculator.dart';
 
 class CoachChatService {
@@ -28,6 +29,7 @@ class CoachChatService {
     required String userMessage,
     required List<Map<String, dynamic>> conversationHistory,
     List<Map<String, dynamic>>? workoutHistory,
+    List<Map<String, dynamic>>? classHistory,
     List<Map<String, dynamic>>? nutritionHistory,
     Map<String, dynamic>? userProfile,
   }) async {
@@ -40,6 +42,10 @@ class CoachChatService {
       // Add workout history if provided
       if (workoutHistory != null) {
         payload['workout_history'] = workoutHistory;
+      }
+
+      if (classHistory != null && classHistory.isNotEmpty) {
+        payload['class_history'] = classHistory;
       }
 
       if (nutritionHistory != null) {
@@ -93,6 +99,24 @@ class CoachChatService {
             'total_duration_seconds': exercise.isDurationBased ? exercise.totalDurationSeconds : null,
           };
         }).toList(),
+      };
+    }).toList();
+  }
+
+  /// Get user's class history formatted for API
+  List<Map<String, dynamic>> getClassHistory({int? limit}) {
+    final classes = ClassService.getAllClasses();
+    
+    final classesToInclude = limit != null && classes.length > limit
+        ? classes.sublist(0, limit)
+        : classes;
+
+    return classesToInclude.map((entry) {
+      return {
+        'class_name': entry.className,
+        'date': entry.timestamp.toIso8601String(),
+        'duration_minutes': entry.durationMinutes,
+        'notes': entry.notes,
       };
     }).toList();
   }
@@ -195,8 +219,10 @@ class CoachChatService {
       
       // Get workout history if requested
       List<Map<String, dynamic>>? workoutHistory;
+      List<Map<String, dynamic>>? classHistory;
       if (includeWorkoutHistory) {
         workoutHistory = service.getWorkoutHistory(limit: workoutHistoryLimit);
+        classHistory = service.getClassHistory(limit: workoutHistoryLimit);
       }
       
       // Get today's nutrition if requested
@@ -218,6 +244,7 @@ class CoachChatService {
         userMessage: userMessage,
         conversationHistory: history.sublist(0, history.length - 1),
         workoutHistory: workoutHistory,
+        classHistory: classHistory,
         nutritionHistory: nutritionData != null ? [nutritionData] : null,
         userProfile: userProfile,
       );

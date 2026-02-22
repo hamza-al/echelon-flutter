@@ -1,51 +1,57 @@
 import '../services/user_service.dart';
 
 class MacroCalculator {
-  // Calculate macro targets based on weight and nutrition goal
+  // Calculate macro targets based on weight and nutrition goal,
+  // or use custom values if the user has set them.
   static Map<String, double> calculateTargets() {
     final user = UserService.getCurrentUser();
     final goals = UserService.getNutritionGoals();
-    
-    if (user.weight == null || goals == null) {
+
+    // Use custom macros if set
+    if (user.customProtein != null || user.customCarbs != null || user.customFats != null) {
       return {
-        'protein': 0,
-        'carbs': 0,
-        'fats': 0,
+        'protein': user.customProtein ?? _defaultProtein(user, goals),
+        'carbs': user.customCarbs ?? _defaultCarbs(user),
+        'fats': user.customFats ?? _defaultFats(user, goals),
       };
     }
     
-    // Parse weight (could be in format "170 lbs" or just "170")
-    final weightStr = user.weight!.replaceAll(RegExp(r'[^0-9.]'), '');
-    final weight = double.tryParse(weightStr) ?? 170; // Default fallback
-    
+    return {
+      'protein': _defaultProtein(user, goals),
+      'carbs': _defaultCarbs(user),
+      'fats': _defaultFats(user, goals),
+    };
+  }
+
+  static double _parseWeight(dynamic user) {
+    if (user.weight == null) return 170;
+    final weightStr = (user.weight as String).replaceAll(RegExp(r'[^0-9.]'), '');
+    return double.tryParse(weightStr) ?? 170;
+  }
+
+  static double _defaultProtein(dynamic user, Map<String, dynamic>? goals) {
+    if (user.weight == null || goals == null) return 0;
+    return _parseWeight(user); // 1g per lb
+  }
+
+  static double _defaultCarbs(dynamic user) {
+    if (user.weight == null) return 0;
+    return _parseWeight(user) * 2.25;
+  }
+
+  static double _defaultFats(dynamic user, Map<String, dynamic>? goals) {
+    if (user.weight == null || goals == null) return 0;
+    final weight = _parseWeight(user);
     final nutritionGoal = goals['goal'] as String?;
-    
-    // Protein: 1g per lb of body weight
-    final protein = weight;
-    
-    // Carbs: 2.25g per lb of body weight
-    final carbs = weight * 2.25;
-    
-    // Fats: Based on goal
-    double fats;
     switch (nutritionGoal) {
       case 'cut':
-        fats = weight * 0.35; // 0.3-0.4 range, using middle
-        break;
+        return weight * 0.35;
       case 'bulk':
-        fats = weight * 0.55; // 0.5-0.6 range, using middle
-        break;
+        return weight * 0.55;
       case 'maintain':
       default:
-        fats = weight * 0.45; // 0.4-0.5 range, using middle
-        break;
+        return weight * 0.45;
     }
-    
-    return {
-      'protein': protein,
-      'carbs': carbs,
-      'fats': fats,
-    };
   }
 }
 

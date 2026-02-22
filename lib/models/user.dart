@@ -34,6 +34,15 @@ class User extends HiveObject {
   @HiveField(9)
   int? targetCalories;
 
+  @HiveField(10)
+  double? customProtein;
+
+  @HiveField(11)
+  double? customCarbs;
+
+  @HiveField(12)
+  double? customFats;
+
   User({
     this.gender,
     this.weight,
@@ -45,6 +54,9 @@ class User extends HiveObject {
     this.longestStreak = 0,
     this.nutritionGoal,
     this.targetCalories,
+    this.customProtein,
+    this.customCarbs,
+    this.customFats,
   })  : goals = goals ?? [],
         createdAt = createdAt ?? DateTime.now(),
         lastUpdated = lastUpdated ?? DateTime.now();
@@ -84,6 +96,18 @@ class User extends HiveObject {
   }) {
     nutritionGoal = goal;
     targetCalories = calories;
+    lastUpdated = DateTime.now();
+  }
+
+  // Update custom macro targets (null = use auto-calculated defaults)
+  void updateCustomMacros({
+    double? protein,
+    double? carbs,
+    double? fats,
+  }) {
+    customProtein = protein;
+    customCarbs = carbs;
+    customFats = fats;
     lastUpdated = DateTime.now();
   }
 

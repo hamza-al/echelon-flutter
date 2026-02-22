@@ -3,6 +3,7 @@ import '../styles.dart';
 import '../widgets/pulsing_particle_sphere.dart';
 import 'active_workout_screen.dart';
 import 'profile_screen.dart';
+import 'log_class_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -113,6 +114,48 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 14,
                         ),
                         textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const LogClassScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.12),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.event_available,
+                                size: 18,
+                                color: AppColors.accent.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Log a Class',
+                                style: AppStyles.mainText().copyWith(
+                                  fontSize: 14,
+                                  color: AppColors.accent.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),

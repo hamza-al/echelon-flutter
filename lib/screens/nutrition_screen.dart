@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../stores/nutrition_store.dart';
 import '../styles.dart';
 import '../utils/macro_calculator.dart';
+import '../services/user_service.dart';
 import 'nutrition_history_screen.dart';
 import 'add_food_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,196 @@ import 'dart:math' as math;
 
 class NutritionScreen extends StatelessWidget {
   const NutritionScreen({super.key});
+
+  void _showEditGoals(BuildContext context, NutritionStore nutritionStore) {
+    final macroTargets = MacroCalculator.calculateTargets();
+    final user = UserService.getCurrentUser();
+
+    final calController = TextEditingController(
+      text: (nutritionStore.targetCalories ?? 2000).toString(),
+    );
+    final proteinController = TextEditingController(
+      text: (macroTargets['protein'] ?? 0).toStringAsFixed(0),
+    );
+    final carbsController = TextEditingController(
+      text: (macroTargets['carbs'] ?? 0).toStringAsFixed(0),
+    );
+    final fatsController = TextEditingController(
+      text: (macroTargets['fats'] ?? 0).toStringAsFixed(0),
+    );
+
+    final hasCustomMacros = user.customProtein != null || user.customCarbs != null || user.customFats != null;
+
+    Widget buildField(String label, TextEditingController ctrl, String suffix, Color color) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: ctrl,
+            keyboardType: TextInputType.number,
+            style: AppStyles.mainText().copyWith(fontSize: 18, fontWeight: FontWeight.w700),
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              suffixText: suffix,
+              suffixStyle: AppStyles.mainText().copyWith(
+                fontSize: 13,
+                color: AppColors.accent.withOpacity(0.5),
+              ),
+              filled: true,
+              fillColor: color.withOpacity(0.08),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        bool customMode = hasCustomMacros;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            backgroundColor: AppColors.cardBackground,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Text(
+              'Daily Goals',
+              style: AppStyles.mainText().copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  buildField('Calories', calController, 'cal', AppColors.primaryLight),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Macros',
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            customMode = !customMode;
+                            if (!customMode) {
+                              final defaults = MacroCalculator.calculateTargets();
+                              proteinController.text = (defaults['protein'] ?? 0).toStringAsFixed(0);
+                              carbsController.text = (defaults['carbs'] ?? 0).toStringAsFixed(0);
+                              fatsController.text = (defaults['fats'] ?? 0).toStringAsFixed(0);
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: customMode
+                                ? AppColors.primaryLight.withOpacity(0.15)
+                                : Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            customMode ? 'Custom' : 'Auto',
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 11,
+                              color: customMode ? AppColors.primaryLight : AppColors.text.withOpacity(0.5),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(child: buildField('Protein', proteinController, 'g', const Color(0xFF6366F1))),
+                      const SizedBox(width: 8),
+                      Expanded(child: buildField('Carbs', carbsController, 'g', const Color(0xFFF59E0B))),
+                      const SizedBox(width: 8),
+                      Expanded(child: buildField('Fats', fatsController, 'g', const Color(0xFFEC4899))),
+                    ],
+                  ),
+                  if (!customMode) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Based on your weight & goal',
+                      style: AppStyles.questionSubtext().copyWith(fontSize: 11),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Cancel',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 14,
+                    color: AppColors.accent.withOpacity(0.6),
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final newCalories = int.tryParse(calController.text.trim());
+                  if (newCalories != null && newCalories > 0) {
+                    nutritionStore.updateTargetCalories(newCalories);
+                  }
+
+                  if (customMode) {
+                    final p = double.tryParse(proteinController.text.trim());
+                    final c = double.tryParse(carbsController.text.trim());
+                    final f = double.tryParse(fatsController.text.trim());
+                    UserService.updateCustomMacros(protein: p, carbs: c, fats: f);
+                  } else {
+                    UserService.updateCustomMacros(protein: null, carbs: null, fats: null);
+                  }
+
+                  nutritionStore.refreshToday();
+                  Navigator.pop(dialogContext);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: AppColors.background,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(
+                  'Save',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.background,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +310,7 @@ class NutritionScreen extends StatelessWidget {
                       remaining: nutritionStore.remaining,
                       progress: nutritionStore.progress,
                       isOverGoal: nutritionStore.isOverGoal,
+                      onTargetTap: () => _showEditGoals(context, nutritionStore),
                     ),
                   ),
                 ),
@@ -132,32 +324,41 @@ class NutritionScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: _MacroRing(
-                            label: 'Protein',
-                            current: nutritionStore.totalProtein,
-                            target: macroTargets['protein'] ?? 0,
-                            color: const Color(0xFF6366F1), // Indigo
-                            unit: 'g',
+                          child: GestureDetector(
+                            onTap: () => _showEditGoals(context, nutritionStore),
+                            child: _MacroRing(
+                              label: 'Protein',
+                              current: nutritionStore.totalProtein,
+                              target: macroTargets['protein'] ?? 0,
+                              color: const Color(0xFF6366F1),
+                              unit: 'g',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _MacroRing(
-                            label: 'Carbs',
-                            current: nutritionStore.totalCarbs,
-                            target: macroTargets['carbs'] ?? 0,
-                            color: const Color(0xFFF59E0B), // Amber
-                            unit: 'g',
+                          child: GestureDetector(
+                            onTap: () => _showEditGoals(context, nutritionStore),
+                            child: _MacroRing(
+                              label: 'Carbs',
+                              current: nutritionStore.totalCarbs,
+                              target: macroTargets['carbs'] ?? 0,
+                              color: const Color(0xFFF59E0B),
+                              unit: 'g',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _MacroRing(
-                            label: 'Fats',
-                            current: nutritionStore.totalFats,
-                            target: macroTargets['fats'] ?? 0,
-                            color: const Color(0xFFEC4899), // Pink
-                            unit: 'g',
+                          child: GestureDetector(
+                            onTap: () => _showEditGoals(context, nutritionStore),
+                            child: _MacroRing(
+                              label: 'Fats',
+                              current: nutritionStore.totalFats,
+                              target: macroTargets['fats'] ?? 0,
+                              color: const Color(0xFFEC4899),
+                              unit: 'g',
+                            ),
                           ),
                         ),
                       ],
@@ -404,6 +605,7 @@ class _CalorieRing extends StatelessWidget {
   final int remaining;
   final double progress;
   final bool isOverGoal;
+  final VoidCallback? onTargetTap;
 
   const _CalorieRing({
     required this.consumed,
@@ -411,6 +613,7 @@ class _CalorieRing extends StatelessWidget {
     required this.remaining,
     required this.progress,
     required this.isOverGoal,
+    this.onTargetTap,
   });
 
   @override
@@ -443,11 +646,25 @@ class _CalorieRing extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'of $displayTarget cal',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 14,
-                      color: AppColors.text.withOpacity(0.5),
+                  GestureDetector(
+                    onTap: onTargetTap,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'of $displayTarget cal',
+                          style: AppStyles.mainText().copyWith(
+                            fontSize: 14,
+                            color: AppColors.text.withOpacity(0.5),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.edit,
+                          size: 12,
+                          color: AppColors.text.withOpacity(0.3),
+                        ),
+                      ],
                     ),
                   ),
                 ],
