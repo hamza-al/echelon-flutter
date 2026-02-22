@@ -10,7 +10,6 @@ import '../widgets/pulsing_particle_sphere.dart';
 import '../widgets/rest_timer_module.dart';
 import '../services/workout_service.dart';
 import '../services/auth_service.dart';
-import '../services/workout_audio_cache.dart';
 import '../models/workout.dart';
 import '../stores/active_workout_store.dart';
 import '../components/workout_results_display.dart';
@@ -121,72 +120,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       }
     }
     
-    // Call the start workout endpoint and play greeting
-    await _playStartWorkoutGreeting();
-  }
-
-  Future<void> _playStartWorkoutGreeting() async {
-    try {
-      setState(() {
-        _statusText = 'Starting...';
-      });
-
-      final audioCache = context.read<WorkoutAudioCache>();
-      
-      // Try to get cached audio first
-      final cachedPath = await audioCache.getCachedAudioPath();
-      
-      if (cachedPath != null) {
-        // Play from cache - instant!
-        setState(() {
-          _isProcessing = false;
-          _isPlaying = true;
-        });
-        
-        await _audioPlayer.play(DeviceFileSource(cachedPath));
-        await _audioPlayer.onPlayerComplete.first;
-        
-        if (mounted) {
-          setState(() {
-            _isPlaying = false;
-            _isInitializing = false;
-            _statusText = 'Tap to speak';
-          });
-        }
-      } else {
-        // Fallback: fetch on demand if cache miss
-        final authService = context.read<AuthService>();
-        final token = authService.token;
-        
-        final headers = <String, String>{};
-        if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-        }
-
-        final response = await http.get(
-          Uri.parse('https://echelon-fastapi.fly.dev/chat/start_workout_voice'),
-          headers: headers,
-        );
-
-        if (response.statusCode == 200) {
-          final body = json.decode(response.body);
-          final base64Audio = body['audio']['base64'];
-          
-          // Play the greeting audio without auto-starting recording
-          await _playResponseAudio(base64Audio, startRecordingAfter: false);
-          
-          // Cache for next time (fire and forget)
-          audioCache.fetchAndCacheAudio().catchError((_) {});
-        } else {
-          // If request fails, still allow user to continue
-          setState(() {
-            _isInitializing = false;
-            _statusText = 'Tap to speak';
-          });
-        }
-      }
-    } catch (e) {
-      // If error occurs, still allow user to continue
+    if (mounted) {
       setState(() {
         _isInitializing = false;
         _statusText = 'Tap to speak';
@@ -591,10 +525,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         });
       }
     });
-    
-    // Clear reps and weight, keep exercise name
-    _repsController.clear();
-    _weightController.clear();
   }
   
   void _showError(String message) {
@@ -623,8 +553,41 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       setState(() {
         _exerciseController.text = _formatExerciseName(selectedExercise);
       });
-      // Focus on reps field after selection
+      _prefillFromHistory(selectedExercise);
       _repsFocusNode.requestFocus();
+    }
+  }
+
+  void _prefillFromHistory(String exerciseName) {
+    final normalizedName = exerciseName.toLowerCase().replaceAll(' ', '_');
+    
+    // Check current workout first
+    if (_currentWorkout != null) {
+      for (final exercise in _currentWorkout!.exercises.reversed) {
+        if (exercise.name == normalizedName && exercise.sets.isNotEmpty) {
+          final lastSet = exercise.sets.last;
+          _repsController.text = lastSet.reps.toString();
+          if (lastSet.weight != null && lastSet.weight! > 0) {
+            _weightController.text = lastSet.weight!.toStringAsFixed(0);
+          }
+          return;
+        }
+      }
+    }
+
+    // Fall back to previous completed workouts
+    final workouts = WorkoutService.getCompletedWorkouts();
+    for (final workout in workouts) {
+      for (final exercise in workout.exercises) {
+        if (exercise.name == normalizedName && exercise.sets.isNotEmpty) {
+          final lastSet = exercise.sets.last;
+          _repsController.text = lastSet.reps.toString();
+          if (lastSet.weight != null && lastSet.weight! > 0) {
+            _weightController.text = lastSet.weight!.toStringAsFixed(0);
+          }
+          return;
+        }
+      }
     }
   }
   

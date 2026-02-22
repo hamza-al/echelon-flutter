@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -24,14 +23,12 @@ class VoiceDemoStep extends StatefulWidget {
 
 class _VoiceDemoStepState extends State<VoiceDemoStep> {
   final AudioRecorder _audioRecorder = AudioRecorder();
-  final AudioPlayer _audioPlayer = AudioPlayer();
   
   bool _isRecording = false;
   bool _isProcessing = false;
-  bool _isPlaying = false;
   bool _hasCompletedDemo = false;
   bool _showResults = false;
-  bool _hideSphere = false; // New flag to control sphere visibility
+  bool _hideSphere = false;
   List<Map<String, dynamic>> _loggedSets = [];
   String _statusText = 'Try saying:';
   String _instructionText = '"Log 3 sets of 8 bench presses at 225 pounds"';
@@ -45,7 +42,6 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
   @override
   void dispose() {
     _audioRecorder.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -129,32 +125,22 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         
-        // Get the base64 audio (same parsing as active_workout_screen)
-        final base64Audio = body['audio']['base64'] as String;
-        
-        // Check if follow_up_needed is false
         final followUpNeeded = body['follow_up_needed'] as bool? ?? true;
         
-        // Store the logged sets (same parsing as active_workout_screen)
         final commands = body['commands'] as List<dynamic>;
         _loggedSets = commands
             .where((cmd) => cmd['type'] == 'log_set')
             .map((cmd) => cmd['payload'] as Map<String, dynamic>)
             .toList();
         
-        // Decode and play the audio
-        await _playResponseAudio(base64Audio);
-        
-        // After audio finishes, show results with fade
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            setState(() {
-              _showResults = true;
-              _hasCompletedDemo = true;
-              _hideSphere = !followUpNeeded; // Hide sphere if no follow up needed
-            });
-          }
-        });
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+            _showResults = true;
+            _hasCompletedDemo = true;
+            _hideSphere = !followUpNeeded;
+          });
+        }
       } else {
         throw Exception('API Error: ${response.statusCode}');
       }
@@ -165,45 +151,10 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
     }
   }
 
-  Future<void> _playResponseAudio(String base64Audio) async {
-    try {
-      // Decode base64 to bytes
-      final audioBytes = base64Decode(base64Audio);
-      
-      // Save to temp file
-      final tempDir = Directory.systemTemp;
-      final tempPath = '${tempDir.path}/response_audio.mp3';
-      final tempFile = File(tempPath);
-      await tempFile.writeAsBytes(audioBytes);
-      
-      setState(() {
-        _isProcessing = false;
-        _isPlaying = true;
-      });
-      
-      // Play the audio
-      await _audioPlayer.play(DeviceFileSource(tempPath));
-      
-      // Listen for completion
-      _audioPlayer.onPlayerComplete.listen((_) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = false;
-          });
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _isProcessing = false;
-        _isPlaying = false;
-      });
-    }
-  }
-
   void _handleTap() {
     if (_isRecording) {
       _stopRecording();
-    } else if (!_isProcessing && !_isPlaying) {
+    } else if (!_isProcessing) {
       _startRecording();
     }
   }
@@ -270,7 +221,7 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'That\'s how it works. Unlock all features like the automatic timer in the next step!',
+                                'Just speak naturally during your workout and Echelon logs everything for you.',
                                 style: AppStyles.questionSubtext().copyWith(
                                   fontSize: 15,
                                 ),
@@ -383,7 +334,7 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
         SizedBox(
           height: 40,
           child: Center(
-            child: !_isRecording && !_isProcessing && !_isPlaying
+            child: !_isRecording && !_isProcessing
                 ? Text(
                     'Tap the sphere to start',
                     style: AppStyles.questionSubtext().copyWith(
@@ -399,7 +350,7 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
                         ),
                         textAlign: TextAlign.center,
                       )
-                    : (_isProcessing || _isPlaying)
+                    : _isProcessing
                         ? const SizedBox(
                             width: 20,
                             height: 20,

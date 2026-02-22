@@ -415,7 +415,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildFeaturesList() {
     final features = [
       {'icon': '💪', 'text': 'AI-powered personal trainer'},
-      {'icon': '📊', 'text': 'Real-time workout feedback'},
       {'icon': '🎙️', 'text': 'Hands-free voice coaching'},
       {'icon': '🏆', 'text': 'Tracking, analytics, and workout scheduling'},
     ];

@@ -505,9 +505,10 @@ class _MiniChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (data.isEmpty || data.length == 1) {
-      return;
-    }
+    if (data.isEmpty) return;
+
+    // If only one data point, prepend a zero so we draw a line showing progress
+    final chartData = data.length == 1 ? [0.0, data.first] : data;
 
     final paint = Paint()
       ..color = color.withOpacity(0.3)
@@ -521,8 +522,8 @@ class _MiniChartPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     // Find min and max for scaling
-    final maxValue = data.reduce((a, b) => a > b ? a : b);
-    final minValue = data.reduce((a, b) => a < b ? a : b);
+    final maxValue = chartData.reduce((a, b) => a > b ? a : b);
+    final minValue = chartData.reduce((a, b) => a < b ? a : b);
     final range = maxValue - minValue;
 
     if (range == 0) {
@@ -537,11 +538,11 @@ class _MiniChartPainter extends CustomPainter {
 
     // Calculate points
     final points = <Offset>[];
-    final stepX = size.width / (data.length - 1);
+    final stepX = size.width / (chartData.length - 1);
 
-    for (int i = 0; i < data.length; i++) {
+    for (int i = 0; i < chartData.length; i++) {
       final x = i * stepX;
-      final normalizedValue = (data[i] - minValue) / range;
+      final normalizedValue = (chartData[i] - minValue) / range;
       final y = size.height - (normalizedValue * size.height);
       points.add(Offset(x, y));
     }

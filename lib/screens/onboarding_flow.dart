@@ -11,6 +11,7 @@ import 'onboarding_steps/nutrition_goal_step.dart';
 import 'onboarding_steps/split_selection_step.dart';
 import 'voice_demo_step.dart';
 import 'paywall_screen.dart';
+import 'onboarding_processing_screen.dart';
 
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
@@ -128,16 +129,24 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       await SplitService.setSplit(selectedSplitObj);
     }
 
-    // Navigate to voice demo
+    // Navigate to processing screen → voice demo → paywall
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => VoiceDemoStep(
-            onComplete: () {
-              // After voice demo, go to paywall
+          builder: (context) => OnboardingProcessingScreen(
+            nutritionGoal: _onboardingData.nutritionGoal ?? 'maintain',
+            onContinue: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => const PaywallScreen(),
+                  builder: (context) => VoiceDemoStep(
+                    onComplete: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const PaywallScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               );
             },
@@ -285,11 +294,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                         disabledBackgroundColor: AppColors.accent.withOpacity(0.3),
                       ),
                       child: Text(
-                        _currentStep == _totalSteps - 1 
-                            ? 'Try Voice Demo'
-                            : (_currentStep == 2 && _onboardingData.gender == null)
-                                ? 'Skip'
-                                : 'Next',
+                        (_currentStep == 2 && _onboardingData.gender == null)
+                            ? 'Skip'
+                            : 'Next',
                         style: AppStyles.mainText().copyWith(
                           color: AppColors.background,
                           fontWeight: FontWeight.w600,
