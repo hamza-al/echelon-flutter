@@ -106,7 +106,7 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('https://echelon-fastapi.fly.dev/chat/voice'),
+        Uri.parse('https://echelon-fastapi.fly.dev/chat/voice_onboarding'),
       );
       
       // Add auth header

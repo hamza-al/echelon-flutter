@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import '../styles.dart';
 import '../models/onboarding_data.dart';
 import '../services/user_service.dart';
+import '../services/split_service.dart';
+import '../models/workout_split.dart';
 import 'onboarding_steps/gender_selection_step.dart';
 import 'onboarding_steps/physical_data_step.dart';
 import 'onboarding_steps/goals_multi_step.dart';
 import 'onboarding_steps/nutrition_goal_step.dart';
+import 'onboarding_steps/split_selection_step.dart';
 import 'voice_demo_step.dart';
 import 'paywall_screen.dart';
 
@@ -20,9 +23,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   int _currentStep = 0;
   final OnboardingData _onboardingData = OnboardingData();
   String? _lastFeedback;
+  String? _selectedSplit;
 
-  // New order: Goals → Physical Data → Gender (optional) → Nutrition Goal → Voice Demo → Paywall
-  final int _totalSteps = 4; // 0, 1, 2, 3 (voice demo shown separately after)
+  // New order: Goals → Physical Data → Gender (optional) → Nutrition Goal → Split Selection → Voice Demo → Paywall
+  final int _totalSteps = 5; // 0, 1, 2, 3, 4 (voice demo shown separately after)
 
   bool _canProceed() {
     switch (_currentStep) {
@@ -37,6 +41,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         return true; // Always can proceed, gender is optional
       case 3: // Nutrition Goal
         return _onboardingData.nutritionGoal != null;
+      case 4: // Split Selection
+        return _selectedSplit != null;
       default:
         return false;
     }
@@ -79,6 +85,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         return 'Got it.';
       case 3:
         return 'Great choice.';
+      case 4:
+        return 'Good pick.';
       default:
         return null;
     }
@@ -112,6 +120,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       goal: _onboardingData.nutritionGoal!,
       calories: _onboardingData.targetCalories,
     );
+
+    // Save selected split
+    if (_selectedSplit != null) {
+      final selectedSplitObj = WorkoutSplit.getAllSplits()
+          .firstWhere((s) => s.splitType == _selectedSplit);
+      await SplitService.setSplit(selectedSplitObj);
+    }
 
     // Navigate to voice demo
     if (mounted) {
@@ -178,6 +193,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             });
           },
         );
+      case 4: // Split Selection
+        return SplitSelectionStep(
+          selectedSplit: _selectedSplit,
+          onSplitSelected: (split) {
+            setState(() {
+              _selectedSplit = split;
+            });
+          },
+        );
       default:
         return const SizedBox();
     }
@@ -236,11 +260,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                         ),
                       ),
                     )
-                  else if (_currentStep >= 1 && _currentStep < 3) // Show language on later screens
+                  else if (_currentStep >= 1 && _currentStep < 4) // Show language on later screens
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
-                        _currentStep == 2 ? 'Final step' : 'Almost ready',
+                        _currentStep == 3 ? 'Almost ready' : (_currentStep == 2 ? 'Final steps' : 'Almost ready'),
                         style: AppStyles.questionSubtext().copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,

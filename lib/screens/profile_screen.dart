@@ -28,17 +28,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // Load immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload whenever screen is shown
     _loadUserData();
   }
 
   void _loadUserData() {
     final user = UserService.getCurrentUser();
-    setState(() {
-      _selectedGender = user.gender;
-      _selectedGoals = List.from(user.goals);
-      _weightLbs = user.weight != null ? int.tryParse(user.weight!) : null;
-      _heightInches = user.height != null ? int.tryParse(user.height!) : null;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedGender = user.gender;
+        _selectedGoals = List.from(user.goals);
+        _weightLbs = user.weight != null ? int.tryParse(user.weight!) : null;
+        _heightInches = user.height != null ? int.tryParse(user.height!) : null;
+      });
+    }
   }
 
   @override

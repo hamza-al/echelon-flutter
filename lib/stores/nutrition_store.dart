@@ -105,6 +105,35 @@ class NutritionStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Update food entry
+  Future<void> updateFood({
+    required String entryId,
+    required String name,
+    required int calories,
+    double? protein,
+    double? carbs,
+    double? fats,
+  }) async {
+    final targetCals = targetCalories;
+    if (targetCals == null) return; // Safety check
+    
+    // First delete the old entry, then add the updated one
+    await _nutritionService.deleteFood(entryId, targetCals);
+    
+    final entry = FoodEntry(
+      id: entryId,  // Keep the same ID
+      name: name,
+      calories: calories,
+      protein: protein,
+      carbs: carbs,
+      fats: fats,
+    );
+    
+    await _nutritionService.logFood(entry, targetCals);
+    _todayNutrition = _nutritionService.getTodayNutrition(targetCals);
+    notifyListeners();
+  }
+
   // Refresh today's data
   void refreshToday() {
     final targetCals = targetCalories;

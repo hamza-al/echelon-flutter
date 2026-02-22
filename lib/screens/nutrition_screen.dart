@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../stores/nutrition_store.dart';
 import '../styles.dart';
 import '../utils/macro_calculator.dart';
-import '../widgets/add_food_dialog.dart';
 import 'nutrition_history_screen.dart';
+import 'add_food_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 
@@ -191,9 +191,11 @@ class NutritionScreen extends StatelessWidget {
                       ),
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const AddFoodDialog(),
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddFoodScreen(),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.add_circle_outline, size: 20),
@@ -301,72 +303,82 @@ class NutritionScreen extends StatelessWidget {
                                 onDismissed: (_) {
                                   nutritionStore.deleteFood(entry.id);
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.cardBackground,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: AppColors.text.withOpacity(0.1),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddFoodScreen(existingEntry: entry),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.cardBackground,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: AppColors.text.withOpacity(0.1),
+                                      ),
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              entry.name,
-                                              style: AppStyles.mainText().copyWith(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  entry.timeFormatted,
-                                                  style: AppStyles.mainText().copyWith(
-                                                    fontSize: 13,
-                                                    color: AppColors.text.withOpacity(0.5),
-                                                  ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                entry.name,
+                                                style: AppStyles.mainText().copyWith(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
-                                                if (entry.protein != null || entry.carbs != null || entry.fats != null) ...[
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
                                                   Text(
-                                                    ' • ',
+                                                    entry.timeFormatted,
                                                     style: AppStyles.mainText().copyWith(
                                                       fontSize: 13,
                                                       color: AppColors.text.withOpacity(0.5),
                                                     ),
                                                   ),
-                                                  Text(
-                                                    [
-                                                      if (entry.protein != null) 'P:${entry.protein!.toStringAsFixed(0)}g',
-                                                      if (entry.carbs != null) 'C:${entry.carbs!.toStringAsFixed(0)}g',
-                                                      if (entry.fats != null) 'F:${entry.fats!.toStringAsFixed(0)}g',
-                                                    ].join(' '),
-                                                    style: AppStyles.mainText().copyWith(
-                                                      fontSize: 12,
-                                                      color: AppColors.text.withOpacity(0.5),
+                                                  if (entry.protein != null || entry.carbs != null || entry.fats != null) ...[
+                                                    Text(
+                                                      ' • ',
+                                                      style: AppStyles.mainText().copyWith(
+                                                        fontSize: 13,
+                                                        color: AppColors.text.withOpacity(0.5),
+                                                      ),
                                                     ),
-                                                  ),
+                                                    Text(
+                                                      [
+                                                        if (entry.protein != null) 'P:${entry.protein!.toStringAsFixed(0)}g',
+                                                        if (entry.carbs != null) 'C:${entry.carbs!.toStringAsFixed(0)}g',
+                                                        if (entry.fats != null) 'F:${entry.fats!.toStringAsFixed(0)}g',
+                                                      ].join(' '),
+                                                      style: AppStyles.mainText().copyWith(
+                                                        fontSize: 12,
+                                                        color: AppColors.text.withOpacity(0.5),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ],
-                                              ],
-                                            ),
-                                          ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '${entry.calories} cal',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primary,
+                                        Text(
+                                          '${entry.calories} cal',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.primary,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

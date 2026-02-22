@@ -60,9 +60,14 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
           children: [
             // Header
             Padding(
@@ -160,7 +165,12 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
 
             // Messages List
             Expanded(
-              child: Consumer<CoachChatStore>(
+              child: GestureDetector(
+                onTap: () {
+                  // Dismiss keyboard when tapping in the messages area
+                  FocusScope.of(context).unfocus();
+                },
+                child: Consumer<CoachChatStore>(
                 builder: (context, store, _) {
                   if (store.messages.isEmpty) {
                     return Center(
@@ -214,6 +224,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                     },
                   );
                 },
+              ),
               ),
             ),
 
@@ -345,6 +356,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

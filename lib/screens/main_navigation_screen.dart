@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:provider/provider.dart';
 import 'home_screen.dart';
 import 'progress_screen.dart';
 import 'nutrition_screen.dart';
 import 'coach_chat_screen.dart';
+import '../stores/nutrition_store.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -24,12 +26,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize nutrition store to load today's data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NutritionStore>().initialize();
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
   void _onPageChanged(int index) {
+    // Dismiss keyboard when changing tabs
+    FocusManager.instance.primaryFocus?.unfocus();
+    
     setState(() {
       _currentIndex = index;
     });

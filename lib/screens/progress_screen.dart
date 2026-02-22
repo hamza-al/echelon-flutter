@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../styles.dart';
 import '../services/workout_service.dart';
 import '../services/user_service.dart';
+import '../services/split_service.dart';
 // import '../services/auth_service.dart';
 import '../models/workout.dart';
 import 'workout_detail_screen.dart';
+import 'weekly_calendar_screen.dart';
+import 'all_exercises_progress_screen.dart';
 // import 'package:provider/provider.dart';
 
 class ProgressScreen extends StatefulWidget {
@@ -35,6 +38,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Map<String, int> _exerciseMaxReps = {}; // exercise -> most reps
   Map<String, DateTime> _exercisePRDates = {}; // exercise -> when PR was set
   Map<String, List<double>> _exerciseVolumeHistory = {}; // exercise -> [volumes over time]
+  Map<String, List<DateTime>> _exerciseWorkoutDates = {}; // exercise -> [dates performed]
+  Map<String, List<double>> _exerciseMaxWeightHistory = {}; // exercise -> [max weights over time]
 
   @override
   void initState() {
@@ -121,13 +126,18 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final prDates = <String, DateTime>{};
     final maxRepsPerExercise = <String, int>{};
     final volumeHistory = <String, List<double>>{};
+    final workoutDates = <String, List<DateTime>>{};
+    final maxWeightHistory = <String, List<double>>{};
     
     for (var workout in workouts) {
       for (var exercise in workout.exercises) {
         if (!volumeHistory.containsKey(exercise.name)) {
           volumeHistory[exercise.name] = [];
+          workoutDates[exercise.name] = [];
+          maxWeightHistory[exercise.name] = [];
         }
         double exerciseVolume = 0;
+        double maxWeightThisWorkout = 0;
         
         for (var set in exercise.sets) {
           if (set.reps > (maxRepsPerExercise[exercise.name] ?? 0)) {
@@ -139,11 +149,18 @@ class _ProgressScreenState extends State<ProgressScreen> {
               prs[exercise.name] = set.weight!;
               prDates[exercise.name] = workout.startTime;
             }
+            if (set.weight! > maxWeightThisWorkout) {
+              maxWeightThisWorkout = set.weight!;
+            }
             exerciseVolume += set.weight! * set.reps;
           }
         }
         
         volumeHistory[exercise.name]!.add(exerciseVolume);
+        workoutDates[exercise.name]!.add(workout.startTime);
+        if (maxWeightThisWorkout > 0) {
+          maxWeightHistory[exercise.name]!.add(maxWeightThisWorkout);
+        }
       }
     }
     
@@ -173,6 +190,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
       _exercisePRDates = prDates;
       _exerciseMaxReps = maxRepsPerExercise;
       _exerciseVolumeHistory = volumeHistory;
+      _exerciseWorkoutDates = workoutDates;
+      _exerciseMaxWeightHistory = maxWeightHistory;
     });
   }
 
@@ -351,10 +370,21 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
                   const SizedBox(height: 32),
 
+                  // Today's Workout
+                  _buildTodaysWorkoutCard(),
+
+                  const SizedBox(height: 24),
+
                   // This Week
                   _buildThisWeekCard(),
 
                   const SizedBox(height: 24),
+
+                  // Exercise Progress (moved to top)
+                  if (_exercisePRs.isNotEmpty) ...[
+                    _buildExerciseProgress(),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Personal Records
                   if (_exercisePRs.isNotEmpty) ...[
@@ -386,6 +416,84 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ..._buildGroupedWorkoutCards(),
                 ],
               ),
+      ),
+    );
+  }
+
+  Widget _buildTodaysWorkoutCard() {
+    final todaysWorkout = SplitService.getTodaysWorkout();
+    final isRest = todaysWorkout == 'Rest';
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const WeeklyCalendarScreen(),
+          ),
+        ).then((_) {
+          // Rebuild to reflect any split changes
+          setState(() {});
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.primaryLight.withOpacity(0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Left side - purple tab indicator
+            Container(
+              width: 3,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(1.5),
+              ),
+            ),
+            const SizedBox(width: 16),
+            
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Today\'s Workout',
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 13,
+                      color: AppColors.accent.withOpacity(0.6),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    todaysWorkout,
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: isRest 
+                          ? AppColors.accent.withOpacity(0.5) 
+                          : AppColors.primaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Arrow icon
+            Icon(
+              Icons.calendar_month_rounded,
+              color: AppColors.primaryLight,
+              size: 28,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -786,6 +894,234 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
+  Widget _buildExerciseProgress() {
+    // Get top exercises by frequency
+    final exerciseFrequency = <String, int>{};
+    for (var dates in _exerciseWorkoutDates.entries) {
+      exerciseFrequency[dates.key] = dates.value.length;
+    }
+    
+    // Sort by frequency and take top 2 for preview
+    final topExercises = exerciseFrequency.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    final exercisesToShow = topExercises.take(2).map((e) => e.key).toList();
+    
+    if (exercisesToShow.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: exerciseFrequency.length > 2 ? () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => AllExercisesProgressScreen(
+                    exercisePRs: _exercisePRs,
+                    exerciseMaxReps: _exerciseMaxReps,
+                    exercisePRDates: _exercisePRDates,
+                    exerciseVolumeHistory: _exerciseVolumeHistory,
+                    exerciseWorkoutDates: _exerciseWorkoutDates,
+                    exerciseMaxWeightHistory: _exerciseMaxWeightHistory,
+                  ),
+                ),
+              );
+            } : null,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Exercise Progress',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (exerciseFrequency.length > 2) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '(${exerciseFrequency.length})',
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.trending_up,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                    if (exerciseFrequency.length > 2) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          ...exercisesToShow.map((exerciseName) {
+            final volumeData = (_exerciseVolumeHistory[exerciseName] ?? []).reversed.toList();
+            final weightData = (_exerciseMaxWeightHistory[exerciseName] ?? []).reversed.toList();
+            final dates = (_exerciseWorkoutDates[exerciseName] ?? []).reversed.toList();
+            
+            // Calculate trend
+            bool hasUpwardTrend = false;
+            if (volumeData.length >= 2) {
+              final recentAvg = volumeData.length >= 3
+                  ? (volumeData[volumeData.length - 1] + volumeData[volumeData.length - 2] + volumeData[volumeData.length - 3]) / 3
+                  : (volumeData[volumeData.length - 1] + volumeData[volumeData.length - 2]) / 2;
+              final olderAvg = volumeData.length >= 4
+                  ? (volumeData[0] + volumeData[1]) / 2
+                  : volumeData[0];
+              hasUpwardTrend = recentAvg > olderAvg;
+            }
+            
+            // Calculate percentage increase in max weight
+            double? weightIncrease;
+            if (weightData.length >= 2) {
+              final firstWeight = weightData.first;
+              final lastWeight = weightData.last;
+              if (firstWeight > 0) {
+                weightIncrease = ((lastWeight - firstWeight) / firstWeight) * 100;
+              }
+            }
+            
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildExerciseProgressCard(
+                exerciseName: exerciseName,
+                timesPerformed: dates.length,
+                hasUpwardTrend: hasUpwardTrend,
+                weightIncrease: weightIncrease,
+                volumeData: volumeData,
+                weightData: weightData,
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseProgressCard({
+    required String exerciseName,
+    required int timesPerformed,
+    required bool hasUpwardTrend,
+    required double? weightIncrease,
+    required List<double> volumeData,
+    required List<double> weightData,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.08),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _formatExerciseName(exerciseName),
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$timesPerformed ${timesPerformed == 1 ? 'session' : 'sessions'}',
+                      style: AppStyles.questionSubtext().copyWith(
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  if (weightIncrease != null && weightIncrease > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '+${weightIncrease.toStringAsFixed(0)}%',
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Icon(
+                    hasUpwardTrend ? Icons.trending_up : Icons.trending_flat,
+                    color: hasUpwardTrend ? Colors.green : Colors.grey,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Mini chart
+          SizedBox(
+            height: 40,
+            child: CustomPaint(
+              painter: _MiniChartPainter(
+                data: weightData.isNotEmpty ? weightData : volumeData,
+                color: AppColors.primaryLight,
+              ),
+              size: const Size(double.infinity, 40),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildExercisePRs() {
     // Sort by most recent PRs first
     final sortedPRs = _exercisePRs.entries.toList()
@@ -1010,6 +1346,92 @@ class _ProgressScreenState extends State<ProgressScreen> {
       final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return '${months[date.month - 1]} ${date.day}, ${date.year}';
     }
+  }
+}
+
+// Custom painter for mini progress charts
+class _MiniChartPainter extends CustomPainter {
+  final List<double> data;
+  final Color color;
+
+  _MiniChartPainter({required this.data, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty || data.length == 1) {
+      return;
+    }
+
+    final paint = Paint()
+      ..color = color.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    final linePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Find min and max for scaling
+    final maxValue = data.reduce((a, b) => a > b ? a : b);
+    final minValue = data.reduce((a, b) => a < b ? a : b);
+    final range = maxValue - minValue;
+
+    if (range == 0) {
+      // If all values are the same, draw a flat line
+      final y = size.height / 2;
+      final path = Path()
+        ..moveTo(0, y)
+        ..lineTo(size.width, y);
+      canvas.drawPath(path, linePaint);
+      return;
+    }
+
+    // Calculate points
+    final points = <Offset>[];
+    final stepX = size.width / (data.length - 1);
+
+    for (int i = 0; i < data.length; i++) {
+      final x = i * stepX;
+      final normalizedValue = (data[i] - minValue) / range;
+      final y = size.height - (normalizedValue * size.height);
+      points.add(Offset(x, y));
+    }
+
+    // Draw filled area under the line
+    final areaPath = Path()
+      ..moveTo(points.first.dx, size.height)
+      ..lineTo(points.first.dx, points.first.dy);
+
+    for (int i = 1; i < points.length; i++) {
+      areaPath.lineTo(points[i].dx, points[i].dy);
+    }
+
+    areaPath.lineTo(points.last.dx, size.height);
+    areaPath.close();
+    canvas.drawPath(areaPath, paint);
+
+    // Draw line
+    final linePath = Path()..moveTo(points.first.dx, points.first.dy);
+    for (int i = 1; i < points.length; i++) {
+      linePath.lineTo(points[i].dx, points[i].dy);
+    }
+    canvas.drawPath(linePath, linePaint);
+
+    // Draw dots at each data point
+    final dotPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    for (final point in points) {
+      canvas.drawCircle(point, 3, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MiniChartPainter oldDelegate) {
+    return oldDelegate.data != data || oldDelegate.color != color;
   }
 }
 

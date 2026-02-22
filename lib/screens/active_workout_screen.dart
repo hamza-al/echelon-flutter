@@ -10,9 +10,11 @@ import '../widgets/pulsing_particle_sphere.dart';
 import '../widgets/rest_timer_module.dart';
 import '../services/workout_service.dart';
 import '../services/auth_service.dart';
+import '../services/workout_audio_cache.dart';
 import '../models/workout.dart';
 import '../stores/active_workout_store.dart';
 import '../components/workout_results_display.dart';
+import 'exercise_selection_screen.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   const ActiveWorkoutScreen({super.key});
@@ -46,6 +48,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   // Animation controller for results fade
   AnimationController? _fadeController;
   Animation<double>? _fadeAnimation;
+  
+  // Tab control - 0: Voice, 1: Manual
+  int _selectedTab = 0;
+  
+  // Manual logging form controllers
+  final TextEditingController _exerciseController = TextEditingController();
+  final TextEditingController _repsController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final FocusNode _repsFocusNode = FocusNode();
+  final FocusNode _weightFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -72,6 +84,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     _fadeController?.dispose();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
+    _exerciseController.dispose();
+    _repsController.dispose();
+    _weightController.dispose();
+    _repsFocusNode.dispose();
+    _weightFocusNode.dispose();
     super.dispose();
   }
 
@@ -114,31 +131,59 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         _statusText = 'Starting...';
       });
 
-      final authService = context.read<AuthService>();
-      final token = authService.token;
+      final audioCache = context.read<WorkoutAudioCache>();
       
-      final headers = <String, String>{};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      final response = await http.get(
-        Uri.parse('https://echelon-fastapi.fly.dev/chat/start_workout_voice'),
-        headers: headers,
-      );
-
-      if (response.statusCode == 200) {
-        final body = json.decode(response.body);
-        final base64Audio = body['audio']['base64'];
-        
-        // Play the greeting audio without auto-starting recording
-        await _playResponseAudio(base64Audio, startRecordingAfter: false);
-      } else {
-        // If request fails, still allow user to continue
+      // Try to get cached audio first
+      final cachedPath = await audioCache.getCachedAudioPath();
+      
+      if (cachedPath != null) {
+        // Play from cache - instant!
         setState(() {
-          _isInitializing = false;
-          _statusText = 'Tap to speak';
+          _isProcessing = false;
+          _isPlaying = true;
         });
+        
+        await _audioPlayer.play(DeviceFileSource(cachedPath));
+        await _audioPlayer.onPlayerComplete.first;
+        
+        if (mounted) {
+          setState(() {
+            _isPlaying = false;
+            _isInitializing = false;
+            _statusText = 'Tap to speak';
+          });
+        }
+      } else {
+        // Fallback: fetch on demand if cache miss
+        final authService = context.read<AuthService>();
+        final token = authService.token;
+        
+        final headers = <String, String>{};
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+
+        final response = await http.get(
+          Uri.parse('https://echelon-fastapi.fly.dev/chat/start_workout_voice'),
+          headers: headers,
+        );
+
+        if (response.statusCode == 200) {
+          final body = json.decode(response.body);
+          final base64Audio = body['audio']['base64'];
+          
+          // Play the greeting audio without auto-starting recording
+          await _playResponseAudio(base64Audio, startRecordingAfter: false);
+          
+          // Cache for next time (fire and forget)
+          audioCache.fetchAndCacheAudio().catchError((_) {});
+        } else {
+          // If request fails, still allow user to continue
+          setState(() {
+            _isInitializing = false;
+            _statusText = 'Tap to speak';
+          });
+        }
       }
     } catch (e) {
       // If error occurs, still allow user to continue
@@ -252,9 +297,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           );
         }
         
-        // Get the base64 audio and follow-up flag
+        // Get the base64 audio
         final base64Audio = body['audio']['base64'];
-        final followUpNeeded = body['follow_up_needed'] as bool? ?? false;
         
         // Save the sets to Hive (only if there are commands)
         final commands = body['commands'] as List<dynamic>;
@@ -263,24 +307,22 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         }
         
         // Play response audio
-        await _playResponseAudio(base64Audio, autoStartRecording: followUpNeeded);
+        await _playResponseAudio(base64Audio);
         
-        // Only show status and reset if no follow-up needed
-        if (!followUpNeeded) {
-          setState(() {
-            _statusText = commands.isNotEmpty ? 'Logged!' : 'Tap to speak';
+        // Update status
+        setState(() {
+          _statusText = commands.isNotEmpty ? 'Logged!' : 'Tap to speak';
+        });
+        
+        // Reset status after delay (only if we logged something)
+        if (commands.isNotEmpty) {
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              setState(() {
+                _statusText = 'Tap to speak';
+              });
+            }
           });
-          
-          // Reset status after delay (only if we logged something)
-          if (commands.isNotEmpty) {
-            Future.delayed(const Duration(seconds: 2), () {
-              if (mounted) {
-                setState(() {
-                  _statusText = 'Tap to speak';
-                });
-              }
-            });
-          }
         }
       }
     } catch (e) {
@@ -390,8 +432,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     });
   }
 
-  Future<void> _playResponseAudio(String base64Audio, {bool startRecordingAfter = false, bool autoStartRecording = false}) async {
+  Future<void> _playResponseAudio(String base64Audio, {bool startRecordingAfter = false}) async {
     try {
+      // Don't play audio if we're not on the voice tab
+      if (_selectedTab != 0) {
+        setState(() {
+          _isProcessing = false;
+          _isPlaying = false;
+          _isInitializing = false;
+          _statusText = 'Tap to speak';
+        });
+        return;
+      }
+      
       final audioBytes = base64Decode(base64Audio);
       final tempDir = Directory.systemTemp;
       final tempPath = '${tempDir.path}/response_audio.mp3';
@@ -421,10 +474,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           });
           await _startRecording();
         }
-        // If follow-up is needed, play ting and auto-start recording
-        else if (autoStartRecording) {
-          await _playTingAndStartRecording();
-        }
         // Otherwise, just set ready state
         else {
           setState(() {
@@ -445,25 +494,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     }
   }
 
-  Future<void> _playTingAndStartRecording() async {
-    try {
-      // Generate a simple beep using a 1000Hz tone
-      // For simplicity, we'll just add a small delay to indicate recording is about to start
-      await Future.delayed(const Duration(milliseconds: 200));
-      
-      // Start recording
-      setState(() {
-        _statusText = 'Listening...';
-      });
-      await _startRecording();
-    } catch (e) {
-      setState(() {
-        _statusText = 'Listening...';
-      });
-      await _startRecording();
-    }
-  }
-
   Future<void> _endWorkout() async {
     if (_currentWorkout != null) {
       // If workout has no exercises, delete it instead of completing
@@ -481,116 +511,543 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     }
   }
 
+  Future<void> _logManualSet() async {
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+    
+    // Validate inputs
+    if (_exerciseController.text.trim().isEmpty) {
+      _showError('Please enter an exercise name');
+      return;
+    }
+    
+    if (_repsController.text.trim().isEmpty) {
+      _showError('Please enter reps');
+      return;
+    }
+    
+    final reps = int.tryParse(_repsController.text.trim());
+    if (reps == null || reps <= 0) {
+      _showError('Please enter a valid number of reps');
+      return;
+    }
+    
+    double? weight;
+    if (_weightController.text.trim().isNotEmpty) {
+      weight = double.tryParse(_weightController.text.trim());
+      if (weight == null || weight < 0) {
+        _showError('Please enter a valid weight');
+        return;
+      }
+    }
+    
+    // Create workout if needed
+    if (_currentWorkout == null) {
+      _currentWorkout = await WorkoutService.createWorkout(
+        notes: 'Manual workout',
+      );
+      
+      if (mounted) {
+        final workoutStore = context.read<ActiveWorkoutStore>();
+        if (!workoutStore.hasActiveWorkout) {
+          workoutStore.startWorkout(_currentWorkout!.id);
+        }
+      }
+    }
+    
+    // Log the set
+    final exerciseName = _exerciseController.text.trim().toLowerCase().replaceAll(' ', '_');
+    await WorkoutService.addSetToExercise(
+      _currentWorkout!,
+      exerciseName,
+      reps,
+      weight,
+    );
+    
+    // Update UI
+    setState(() {
+      _totalSets = _currentWorkout!.totalSets;
+      _lastLoggedSets = [{
+        'exercise': exerciseName,
+        'reps': reps,
+        'weight': weight ?? 0,
+        'duration_seconds': 0,
+      }];
+      _showResults = true;
+    });
+    
+    // Trigger fade-in animation
+    _fadeController?.forward(from: 0.0);
+    
+    // Auto-hide after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _fadeController?.reverse().then((_) {
+          if (mounted) {
+            setState(() {
+              _showResults = false;
+            });
+          }
+        });
+      }
+    });
+    
+    // Clear reps and weight, keep exercise name
+    _repsController.clear();
+    _weightController.clear();
+  }
+  
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+  
+  Future<void> _selectExercise() async {
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+    
+    // Navigate to exercise selection screen
+    final selectedExercise = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ExerciseSelectionScreen(),
+      ),
+    );
+    
+    if (selectedExercise != null) {
+      setState(() {
+        _exerciseController.text = _formatExerciseName(selectedExercise);
+      });
+      // Focus on reps field after selection
+      _repsFocusNode.requestFocus();
+    }
+  }
+  
+  String _formatExerciseName(String exercise) {
+    return exercise
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
+  }
+  
+  Future<void> _stopAllAudioAndRecording() async {
+    // Stop recording if in progress
+    if (_isRecording) {
+      try {
+        await _audioRecorder.stop();
+      } catch (e) {
+        // Ignore errors when stopping
+      }
+    }
+    
+    // Stop audio playback if playing
+    try {
+      await _audioPlayer.stop();
+    } catch (e) {
+      // Ignore errors when stopping
+    }
+    
+    // Reset states
+    if (mounted) {
+      setState(() {
+        _isRecording = false;
+        _isProcessing = false;
+        _isPlaying = false;
+        _isInitializing = false;
+        _statusText = 'Tap to speak';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Main content
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+    return GestureDetector(
+      onTap: () {
+        // Dismiss keyboard when tapping outside
+        if (_selectedTab == 1) {
+          FocusScope.of(context).unfocus();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
                 children: [
-                  // Status text
-                  Text(
-                    _statusText,
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      color: AppColors.accent.withOpacity(0.7),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Hero sphere
-                  GestureDetector(
-                    onTap: _handleTap,
-                    child: Hero(
-                      tag: 'workout_sphere',
-                      child: PulsingParticleSphere(
-                        size: 240,
-                        primaryColor: _isRecording 
-                            ? AppColors.recordingPrimary
-                            : AppColors.primary,
-                        secondaryColor: _isRecording
-                            ? AppColors.recordingSecondary
-                            : AppColors.primaryLight,
-                        accentColor: _isRecording
-                            ? AppColors.recordingAccent
-                            : AppColors.primaryDark,
-                        highlightColor: _isRecording
-                            ? AppColors.recordingHighlight
-                            : AppColors.primary,
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  // Rest timer module (appears below sphere)
-                  if (_showRestTimer)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: RestTimerModule(
-                        key: ValueKey(_restTimerDuration),
-                        durationSeconds: _restTimerDuration,
-                        onComplete: () {
-                          setState(() {
-                            _showRestTimer = false;
-                          });
-                        },
-                      ),
-                    ),
-                  
-                  // Workout results (appears below sphere with fade)
-                  if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: FadeTransition(
-                        opacity: _fadeAnimation!,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          child: WorkoutResultsDisplay(
-                            loggedSets: _lastLoggedSets,
+                  // Header with close button and tab control
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: Row(
+                      children: [
+                        // Close button
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: AppColors.accent,
+                            size: 28,
+                          ),
+                          onPressed: _endWorkout,
+                        ),
+                        
+                        const Spacer(),
+                        
+                        // Tab control
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildTabButton(
+                                label: 'Voice',
+                                icon: Icons.mic,
+                                index: 0,
+                              ),
+                              const SizedBox(width: 4),
+                              _buildTabButton(
+                                label: 'Manual',
+                                icon: Icons.edit,
+                                index: 1,
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                        
+                        const Spacer(),
+                        
+                        // Spacer to balance the close button
+                        const SizedBox(width: 48),
+                      ],
                     ),
+                  ),
                   
-                  if (!_showRestTimer && !_showResults)
-                    const SizedBox(height: 40),
-                  
-                  // Hint text
-                  Text(
-                    _isRecording 
-                        ? 'Tap when finished'
-                        : _isProcessing || _isPlaying || _isInitializing
-                            ? ''
-                            : 'Speak your sets',
-                    style: AppStyles.questionSubtext().copyWith(
-                      fontSize: 14,
-                    ),
+                  // Main content area
+                  Expanded(
+                    child: _selectedTab == 0 
+                        ? _buildVoiceContent()
+                        : _buildManualContent(),
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTabButton({
+    required String label,
+    required IconData icon,
+    required int index,
+  }) {
+    final isSelected = _selectedTab == index;
+    
+    return GestureDetector(
+      onTap: () async {
+        // Stop all audio and recording before switching tabs
+        await _stopAllAudioAndRecording();
+        
+        setState(() {
+          _selectedTab = index;
+        });
+        // Dismiss keyboard when switching tabs
+        FocusScope.of(context).unfocus();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? AppColors.primaryLight 
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected 
+                  ? AppColors.background 
+                  : AppColors.accent.withOpacity(0.5),
             ),
-            
-            // Close button
-            Positioned(
-              top: 16,
-              left: 16,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.close,
-                  color: AppColors.accent,
-                  size: 28,
-                ),
-                onPressed: _endWorkout,
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: AppStyles.mainText().copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected 
+                    ? AppColors.background 
+                    : AppColors.accent.withOpacity(0.5),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  Widget _buildVoiceContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Status text
+          Text(
+            _statusText,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 16,
+              color: AppColors.accent.withOpacity(0.7),
+            ),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Hero sphere
+          GestureDetector(
+            onTap: _handleTap,
+            child: Hero(
+              tag: 'workout_sphere',
+              child: PulsingParticleSphere(
+                size: 240,
+                primaryColor: _isRecording 
+                    ? AppColors.recordingPrimary
+                    : AppColors.primary,
+                secondaryColor: _isRecording
+                    ? AppColors.recordingSecondary
+                    : AppColors.primaryLight,
+                accentColor: _isRecording
+                    ? AppColors.recordingAccent
+                    : AppColors.primaryDark,
+                highlightColor: _isRecording
+                    ? AppColors.recordingHighlight
+                    : AppColors.primary,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Rest timer module (appears below sphere)
+          if (_showRestTimer)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: RestTimerModule(
+                key: ValueKey(_restTimerDuration),
+                durationSeconds: _restTimerDuration,
+                onComplete: () {
+                  setState(() {
+                    _showRestTimer = false;
+                  });
+                },
+              ),
+            ),
+          
+          // Workout results (appears below sphere with fade)
+          if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: FadeTransition(
+                opacity: _fadeAnimation!,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  child: WorkoutResultsDisplay(
+                    loggedSets: _lastLoggedSets,
+                  ),
+                ),
+              ),
+            ),
+          
+          if (!_showRestTimer && !_showResults)
+            const SizedBox(height: 40),
+          
+          // Hint text
+          Text(
+            _isRecording 
+                ? 'Tap when finished'
+                : _isProcessing || _isPlaying || _isInitializing
+                    ? ''
+                    : 'Speak your sets',
+            style: AppStyles.questionSubtext().copyWith(
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildManualContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 20),
+          
+          // Title
+          Text(
+            'Log a Set',
+            style: AppStyles.mainHeader().copyWith(
+              fontSize: 28,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Exercise name field
+          Text(
+            'Exercise',
+            style: AppStyles.mainText().copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.accent.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: _selectExercise,
+            child: AbsorbPointer(
+              child: TextField(
+                controller: _exerciseController,
+                style: AppStyles.mainText().copyWith(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Tap to select',
+                  hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
+                  filled: true,
+                  fillColor: AppColors.primary.withOpacity(0.1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.accent.withOpacity(0.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Reps field
+          Text(
+            'Reps',
+            style: AppStyles.mainText().copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.accent.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _repsController,
+            focusNode: _repsFocusNode,
+            style: AppStyles.mainText().copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'e.g., 10',
+              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
+              filled: true,
+              fillColor: AppColors.primary.withOpacity(0.1),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            onSubmitted: (_) => _weightFocusNode.requestFocus(),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Weight field (optional)
+          Text(
+            'Weight (lbs) - Optional',
+            style: AppStyles.mainText().copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.accent.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _weightController,
+            focusNode: _weightFocusNode,
+            style: AppStyles.mainText().copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'e.g., 135',
+              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
+              filled: true,
+              fillColor: AppColors.primary.withOpacity(0.1),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onSubmitted: (_) => _logManualSet(),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Log button
+          ElevatedButton(
+            onPressed: _logManualSet,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryLight,
+              foregroundColor: AppColors.background,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Log Set',
+              style: AppStyles.mainText().copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.background,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Workout results (for manual mode)
+          if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
+            FadeTransition(
+              opacity: _fadeAnimation!,
+              child: WorkoutResultsDisplay(
+                loggedSets: _lastLoggedSets,
+              ),
+            ),
+        ],
       ),
     );
   }

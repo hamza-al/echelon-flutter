@@ -16,10 +16,13 @@ import 'models/exercise_set.dart';
 import 'models/food_entry.dart';
 import 'models/daily_nutrition.dart';
 import 'models/auth_data.dart';
+import 'models/workout_split.dart';
 import 'services/user_service.dart';
 import 'services/workout_service.dart';
 import 'services/nutrition_service.dart';
 import 'services/auth_service.dart';
+import 'services/workout_audio_cache.dart';
+import 'services/split_service.dart';
 import 'stores/active_workout_store.dart';
 import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
@@ -42,16 +45,26 @@ void main() async {
   Hive.registerAdapter(FoodEntryAdapter());
   Hive.registerAdapter(DailyNutritionAdapter());
   Hive.registerAdapter(AuthDataAdapter());
+  Hive.registerAdapter(WorkoutSplitAdapter());
   
   // Initialize services
   await UserService.init();
   await WorkoutService.init();
+  await SplitService.init();
   
   final nutritionService = NutritionService();
   await nutritionService.initialize();
   
   final authService = AuthService();
   await authService.initialize();
+  
+  // Initialize workout audio cache
+  final workoutAudioCache = WorkoutAudioCache(authService);
+  
+  // Pre-fetch workout start audio in background (non-blocking)
+  workoutAudioCache.fetchAndCacheAudio().catchError((_) {
+    // Silently ignore errors - will fetch on demand if needed
+  });
   
   // Load environment variables
   await dotenv.load(fileName: ".env");
@@ -65,6 +78,7 @@ void main() async {
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
+        Provider<WorkoutAudioCache>.value(value: workoutAudioCache),
         Provider<NutritionService>.value(value: nutritionService),
         ChangeNotifierProvider(create: (_) => ActiveWorkoutStore()),
         ChangeNotifierProvider(create: (_) => CoachChatStore()),
@@ -76,7 +90,8 @@ void main() async {
 }
 
 Future<void> _initRevenueCat(String apiKey) async {
-  await Purchases.setLogLevel(LogLevel.debug);
+  // Only set log level in debug mode
+  // Removed for production: await Purchases.setLogLevel(LogLevel.debug);
   
   if (!Platform.isIOS && !Platform.isAndroid) {
     return;

@@ -10,6 +10,7 @@ import 'package:echelon/models/exercise_set.dart';
 import 'package:echelon/models/food_entry.dart';
 import 'package:echelon/models/user.dart';
 import 'package:echelon/models/workout.dart';
+import 'package:echelon/models/workout_split.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
@@ -20,6 +21,7 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(FoodEntryAdapter());
     registerAdapter(UserAdapter());
     registerAdapter(WorkoutAdapter());
+    registerAdapter(WorkoutSplitAdapter());
   }
 }
 
@@ -32,5 +34,6 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(FoodEntryAdapter());
     registerAdapter(UserAdapter());
     registerAdapter(WorkoutAdapter());
+    registerAdapter(WorkoutSplitAdapter());
   }
 }

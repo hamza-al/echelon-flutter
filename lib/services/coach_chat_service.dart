@@ -29,6 +29,7 @@ class CoachChatService {
     required List<Map<String, dynamic>> conversationHistory,
     List<Map<String, dynamic>>? workoutHistory,
     List<Map<String, dynamic>>? nutritionHistory,
+    Map<String, dynamic>? userProfile,
   }) async {
     try {
       final payload = {
@@ -43,6 +44,11 @@ class CoachChatService {
 
       if (nutritionHistory != null) {
         payload['nutrition_history'] = nutritionHistory;
+      }
+      
+      // Add user profile if provided
+      if (userProfile != null) {
+        payload['user_profile'] = userProfile;
       }
       
       final response = await http.post(
@@ -89,6 +95,32 @@ class CoachChatService {
         }).toList(),
       };
     }).toList();
+  }
+
+  /// Get user profile data formatted for API
+  Map<String, dynamic>? getUserProfile() {
+    final user = UserService.getCurrentUser();
+    
+    // Parse weight and height to numbers for API
+    int? weightLbs;
+    int? heightInches;
+    
+    if (user.weight != null) {
+      weightLbs = int.tryParse(user.weight!);
+    }
+    
+    if (user.height != null) {
+      heightInches = int.tryParse(user.height!);
+    }
+    
+    return {
+      'gender': user.gender,
+      'weight_lbs': weightLbs,
+      'height_inches': heightInches,
+      'goals': user.goals,
+      'nutrition_goal': user.nutritionGoal,
+      'target_calories': user.targetCalories,
+    };
   }
 
   /// Get today's nutrition data formatted for API
@@ -147,6 +179,7 @@ class CoachChatService {
     NutritionStore? nutritionStore,
     bool includeWorkoutHistory = true,
     bool includeNutritionHistory = true,
+    bool includeUserProfile = true,
     int? workoutHistoryLimit = 10,
   }) async {
     // Add user message to store
@@ -174,12 +207,19 @@ class CoachChatService {
         }
       }
       
+      // Get user profile if requested
+      Map<String, dynamic>? userProfile;
+      if (includeUserProfile) {
+        userProfile = service.getUserProfile();
+      }
+      
       // Send to API
       final response = await service.sendMessage(
         userMessage: userMessage,
         conversationHistory: history.sublist(0, history.length - 1),
         workoutHistory: workoutHistory,
         nutritionHistory: nutritionData != null ? [nutritionData] : null,
+        userProfile: userProfile,
       );
 
       // Add agent response to store
