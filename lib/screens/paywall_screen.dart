@@ -3,7 +3,6 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../styles.dart';
 import '../services/user_service.dart';
-import '../widgets/pulsing_particle_sphere.dart';
 import 'main_navigation_screen.dart';
 
 class PaywallScreen extends StatefulWidget {
@@ -199,45 +198,64 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 20),
+
                               // Title
                               Text(
-                                'Unlock Your Full\nPotential',
+                                'Your plan\nis built.',
                                 style: AppStyles.mainHeader().copyWith(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 36,
                                   color: AppColors.accent,
                                   height: 1.1,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                               
-                              const SizedBox(height: 20),
-                              
-                              // Sphere
-                              const PulsingParticleSphere(
-                                size: 140,
-                              ),
-                              
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 10),
                               
                               // Subtitle
                               Text(
-                                'Upgrade to unlock these features\nand more:',
+                                'Unlock Echelon to get started.',
                                 style: AppStyles.mainText().copyWith(
-                                  fontSize: 14,
-                                  color: AppColors.accent.withOpacity(0.7),
-                                  height: 1.3,
+                                  fontSize: 16,
+                                  color: AppColors.accent.withOpacity(0.6),
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                               
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 32),
                               
                               // Feature list
                               _buildFeaturesList(),
+
+                              const SizedBox(height: 20),
+
+                              // Social proof
+                              Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ...List.generate(5, (_) => Padding(
+                                      padding: const EdgeInsets.only(right: 2),
+                                      child: Icon(
+                                        Icons.star_rounded,
+                                        size: 16,
+                                        color: const Color(0xFFFBBF24),
+                                      ),
+                                    )),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Join thousands training smarter',
+                                      style: AppStyles.mainText().copyWith(
+                                        fontSize: 13,
+                                        color: AppColors.accent.withOpacity(0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               
-                              const SizedBox(height: 100), // Space for bottom card
+                              const SizedBox(height: 120),
                             ],
                           ),
                         ),
@@ -297,7 +315,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                       ),
                                     )
                                   : Text(
-                                      'Claim offer',
+                                      'Unlock Echelon',
                                       style: AppStyles.mainText().copyWith(
                                         color: AppColors.background,
                                         fontWeight: FontWeight.w700,
@@ -311,7 +329,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           
                           // Footer text
                           Text(
-                            'Change or cancel anytime',
+                            'Cancel anytime in Settings',
                             style: AppStyles.mainText().copyWith(
                               fontSize: 12,
                               color: AppColors.accent.withOpacity(0.6),
@@ -413,41 +431,56 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildFeaturesList() {
-    final features = [
-      {'icon': '💪', 'text': 'AI-powered personal trainer'},
-      {'icon': '🎙️', 'text': 'Hands-free voice coaching'},
-      {'icon': '🏆', 'text': 'Tracking, analytics, and workout scheduling'},
+    const features = [
+      (Icons.mic_none_rounded, 'Hands-free voice logging', 'Log sets by speaking — no tapping needed'),
+      (Icons.auto_awesome, 'AI coach that adapts to you', 'Personalized advice based on your progress'),
+      (Icons.restaurant_menu_rounded, 'Smart nutrition tracking', 'Calorie and macro targets tailored to your goal'),
+      (Icons.calendar_month_rounded, 'Workout splits and scheduling', 'Structured plans that fit your routine'),
+      (Icons.insights_rounded, 'Progress analytics and graphs', 'See your strength gains over time'),
     ];
     
     return Column(
       children: features.map((feature) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 16),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withOpacity(0.15),
+                  color: AppColors.primaryLight.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Center(
-                  child: Text(
-                    feature['icon']!,
-                    style: const TextStyle(fontSize: 18),
-                  ),
+                child: Icon(
+                  feature.$1,
+                  size: 20,
+                  color: AppColors.primaryLight,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  feature['text']!,
-                  style: AppStyles.mainText().copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accent,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      feature.$2,
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      feature.$3,
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 13,
+                        color: AppColors.accent.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -458,7 +491,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildPricingOptions() {
-    // Find monthly and annual packages
     Package? monthlyPackage;
     Package? annualPackage;
     
@@ -472,17 +504,38 @@ class _PaywallScreenState extends State<PaywallScreen> {
         monthlyPackage = package;
       }
     }
-    
+
+    // Compute dynamic pricing strings
+    String annualMonthly = '';
+    String discountBadge = '';
+    String monthlyOriginal = '';
+
+    if (annualPackage != null) {
+      final annualPrice = annualPackage.storeProduct.price;
+      final monthlyEquiv = annualPrice / 12;
+      annualMonthly = '\$${monthlyEquiv.toStringAsFixed(0)}/mo';
+
+      if (monthlyPackage != null) {
+        final monthlyPrice = monthlyPackage.storeProduct.price;
+        final fullYearAtMonthly = monthlyPrice * 12;
+        if (fullYearAtMonthly > annualPrice) {
+          final savings = ((1 - annualPrice / fullYearAtMonthly) * 100).round();
+          discountBadge = 'MOST POPULAR $savings% OFF';
+          monthlyOriginal = '\$${fullYearAtMonthly.toStringAsFixed(0)}';
+        }
+      }
+    }
+
     return Column(
       children: [
         if (annualPackage != null)
           _buildPricingCard(
             package: annualPackage,
             title: 'Yearly',
-            subtitle: '\$10/mo',
+            subtitle: annualMonthly,
             billedText: 'Billed yearly at',
-            originalPrice: '\$180',
-            discountBadge: 'MOST POPULAR 33% OFF',
+            originalPrice: monthlyOriginal,
+            discountBadge: discountBadge,
             isPopular: true,
           ),
         if (annualPackage != null && monthlyPackage != null)
@@ -491,7 +544,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildPricingCard(
             package: monthlyPackage,
             title: 'Monthly',
-            subtitle: '\$15/mo',
+            subtitle: '${monthlyPackage.storeProduct.priceString}/mo',
             billedText: 'Billed monthly at',
             originalPrice: '',
             discountBadge: '',

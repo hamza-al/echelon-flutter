@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -26,10 +27,26 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
   
-  bool _isRecording = false;
+  // Voice states
   bool _isProcessing = false;
   bool _isPlaying = false;
-  bool _isInitializing = true;
+  bool _isListening = false;      // Mic is open, waiting for speech
+  bool _speechDetected = false;   // Speech has been detected in current recording
+  
+  // Adaptive VAD
+  double? _noiseFloor;
+  double _speechThreshold = -30.0;
+  double _silenceThreshold = -45.0;
+  bool _isCalibrating = false;
+  final List<double> _calibrationSamples = [];
+  int _speechConfirmCount = 0;
+  static const int _speechConfirmRequired = 2;
+  static const double _speechOffset = 18.0;
+  static const double _silenceOffset = 8.0;
+  static const double _minHysteresis = 10.0;
+  static const Duration _silenceTimeout = Duration(milliseconds: 1500);
+  StreamSubscription<Amplitude>? _amplitudeSubscription;
+  Timer? _silenceTimer;
   
   Workout? _currentWorkout;
   // ignore: unused_field
@@ -62,7 +79,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   void initState() {
     super.initState();
     
-    // Initialize fade animation controller
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -72,7 +88,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       curve: Curves.easeInOut,
     );
     
-    // Defer provider updates until after the first frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeWorkout();
     });
@@ -80,6 +95,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
 
   @override
   void dispose() {
+    _silenceTimer?.cancel();
+    _amplitudeSubscription?.cancel();
     _fadeController?.dispose();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
@@ -92,11 +109,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   }
 
   Future<void> _initializeWorkout() async {
-    // Check if there's already an active workout
     Workout? activeWorkout = WorkoutService.getActiveWorkout();
     
     if (activeWorkout != null) {
-      // Initialize store with existing workout ID ONLY if not already started
       if (mounted) {
         final workoutStore = context.read<ActiveWorkoutStore>();
         if (!workoutStore.hasActiveWorkout) {
@@ -110,77 +125,183 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       });
     }
     
-    // If no active workout yet, start the store session without a workout ID
-    // The workout will be created on first log
     if (mounted && _currentWorkout == null) {
       final workoutStore = context.read<ActiveWorkoutStore>();
       if (!workoutStore.hasActiveWorkout) {
-        // Start with a temporary ID that will be replaced when workout is created
         workoutStore.startWorkout('pending');
       }
     }
     
     if (mounted) {
-      setState(() {
-        _isInitializing = false;
-        _statusText = 'Tap to speak';
-      });
+      // Auto-start listening on voice tab
+      if (_selectedTab == 0) {
+        await _startListening();
+      }
     }
   }
 
-  Future<void> _handleTap() async {
-    // Don't allow interaction during initialization, processing, or playing
-    if (_isInitializing || _isProcessing || _isPlaying) return;
+  // --- VAD-based auto-listening ---
 
-    if (_isRecording) {
-      await _stopRecording();
-    } else {
-      await _startRecording();
-    }
-  }
+  Future<void> _startListening() async {
+    if (_isListening || _isProcessing || _isPlaying) return;
 
-  Future<void> _startRecording() async {
     try {
-      if (await _audioRecorder.hasPermission()) {
-        final Directory tempDir = Directory.systemTemp;
-        final String filePath = '${tempDir.path}/workout_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        
-        await _audioRecorder.start(
-          const RecordConfig(
-            encoder: AudioEncoder.aacLc,
-            sampleRate: 44100,
-            bitRate: 128000,
-          ),
-          path: filePath,
-        );
-        
+      if (!await _audioRecorder.hasPermission()) return;
+
+      final tempDir = Directory.systemTemp;
+      final filePath = '${tempDir.path}/workout_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      
+      await _audioRecorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          sampleRate: 44100,
+          bitRate: 128000,
+        ),
+        path: filePath,
+      );
+
+      _speechDetected = false;
+      _silenceTimer?.cancel();
+      
+      // Reset adaptive VAD state for fresh calibration
+      _noiseFloor = null;
+      _calibrationSamples.clear();
+      _speechConfirmCount = 0;
+      _isCalibrating = true;
+      
+      // Monitor amplitude for VAD
+      _amplitudeSubscription?.cancel();
+      _amplitudeSubscription = _audioRecorder
+          .onAmplitudeChanged(const Duration(milliseconds: 150))
+          .listen(_onAmplitude);
+      
+      if (mounted) {
         setState(() {
-          _isRecording = true;
-          _statusText = 'Listening...';
+          _isListening = true;
+          _statusText = 'Calibrating...';
         });
       }
     } catch (e) {
+      // Fall back to ready state
     }
   }
 
-  Future<void> _stopRecording() async {
+  void _onAmplitude(Amplitude amp) {
+    if (!mounted || !_isListening) return;
+
+    final db = amp.current;
+
+    // Phase A: Calibration — collect samples to measure noise floor
+    if (_isCalibrating) {
+      _calibrationSamples.add(db);
+      debugPrint('[VAD] Calibrating sample ${_calibrationSamples.length}: ${db.toStringAsFixed(1)} dB');
+
+      if (_calibrationSamples.length >= 6) {
+        final sorted = List<double>.from(_calibrationSamples)..sort();
+        final trimmed = sorted.sublist(0, sorted.length - 1);
+        _noiseFloor = trimmed.reduce((a, b) => a + b) / trimmed.length;
+        _speechThreshold = _noiseFloor! + _speechOffset;
+        _silenceThreshold = _noiseFloor! + _silenceOffset;
+
+        // Enforce minimum hysteresis
+        if ((_speechThreshold - _silenceThreshold) < _minHysteresis) {
+          _speechThreshold = _silenceThreshold + _minHysteresis;
+        }
+
+        _isCalibrating = false;
+        debugPrint('[VAD] Calibration done — floor: ${_noiseFloor!.toStringAsFixed(1)}, speechTh: ${_speechThreshold.toStringAsFixed(1)}, silenceTh: ${_silenceThreshold.toStringAsFixed(1)}');
+
+        if (mounted) {
+          setState(() { _statusText = 'Listening...'; });
+        }
+      }
+      return;
+    }
+
+    // Phase B & C: Speech detection with confirmation + silence detection
+    debugPrint('[VAD] dB: ${db.toStringAsFixed(1)} | floor: ${_noiseFloor?.toStringAsFixed(1)} | speechTh: ${_speechThreshold.toStringAsFixed(1)} | silenceTh: ${_silenceThreshold.toStringAsFixed(1)} | confirm: $_speechConfirmCount/$_speechConfirmRequired | speech: $_speechDetected');
+
+    if (db > _speechThreshold) {
+      _speechConfirmCount++;
+      if (!_speechDetected && _speechConfirmCount >= _speechConfirmRequired) {
+        _speechDetected = true;
+        debugPrint('[VAD] >>> Speech confirmed after $_speechConfirmCount samples');
+        if (mounted) {
+          setState(() { _statusText = 'Hearing you...'; });
+        }
+      }
+      _silenceTimer?.cancel();
+      _silenceTimer = null;
+    } else {
+      _speechConfirmCount = 0;
+
+      if (_speechDetected && db < _silenceThreshold) {
+        if (_silenceTimer == null) {
+          debugPrint('[VAD] ... Silence detected, starting ${_silenceTimeout.inMilliseconds}ms countdown');
+        }
+        _silenceTimer ??= Timer(_silenceTimeout, () {
+          debugPrint('[VAD] <<< Silence timeout — sending recording');
+          if (mounted && _isListening && _speechDetected) {
+            _finishAndSend();
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> _finishAndSend() async {
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
+    _amplitudeSubscription?.cancel();
+    _amplitudeSubscription = null;
+
     try {
       final path = await _audioRecorder.stop();
       
-      setState(() {
-        _isRecording = false;
-        _isProcessing = true;
-        _statusText = 'Processing...';
-      });
-      
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          _speechDetected = false;
+          _isProcessing = true;
+          _statusText = 'Processing...';
+        });
+      }
+
       if (path != null) {
         await _sendToAPI(path);
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+          _speechDetected = false;
+          _isProcessing = false;
+        });
+        // Restart listening on error
+        await _startListening();
+      }
+    }
+  }
+
+  Future<void> _stopListening() async {
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
+    _amplitudeSubscription?.cancel();
+    _amplitudeSubscription = null;
+
+    if (_isListening) {
+      try {
+        await _audioRecorder.stop();
+      } catch (e) {
+        // Ignore
+      }
+    }
+
+    if (mounted) {
       setState(() {
-        _isRecording = false;
-        _isProcessing = false;
-        _statusText = 'Error occurred';
+        _isListening = false;
+        _speechDetected = false;
+        _isCalibrating = false;
       });
     }
   }
@@ -243,27 +364,21 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         // Play response audio
         await _playResponseAudio(base64Audio);
         
-        // Update status
-        setState(() {
-          _statusText = commands.isNotEmpty ? 'Logged!' : 'Tap to speak';
-        });
-        
-        // Reset status after delay (only if we logged something)
-        if (commands.isNotEmpty) {
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              setState(() {
-                _statusText = 'Tap to speak';
-              });
-            }
-          });
+        // After response, restart listening automatically
+        if (mounted && _selectedTab == 0) {
+          await _startListening();
         }
       }
     } catch (e) {
-      setState(() {
-        _isProcessing = false;
-        _statusText = 'Error occurred';
-      });
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+        // Restart listening on error
+        if (_selectedTab == 0) {
+          await _startListening();
+        }
+      }
     }
   }
 
@@ -366,15 +481,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     });
   }
 
-  Future<void> _playResponseAudio(String base64Audio, {bool startRecordingAfter = false}) async {
+  Future<void> _playResponseAudio(String base64Audio) async {
     try {
-      // Don't play audio if we're not on the voice tab
       if (_selectedTab != 0) {
         setState(() {
           _isProcessing = false;
           _isPlaying = false;
-          _isInitializing = false;
-          _statusText = 'Tap to speak';
         });
         return;
       }
@@ -388,49 +500,37 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       setState(() {
         _isProcessing = false;
         _isPlaying = true;
+        _statusText = 'Speaking...';
       });
       
       await _audioPlayer.play(DeviceFileSource(tempPath));
-      
-      // Wait for playback to complete
       await _audioPlayer.onPlayerComplete.first;
       
       if (mounted) {
         setState(() {
           _isPlaying = false;
         });
-        
-        // If this is the start greeting, begin recording
-        if (startRecordingAfter) {
-          setState(() {
-            _isInitializing = false;
-            _statusText = 'Listening...';
-          });
-          await _startRecording();
-        }
-        // Otherwise, just set ready state
-        else {
-          setState(() {
-            _isInitializing = false;
-            _statusText = 'Tap to speak';
-          });
-        }
       }
     } catch (e) {
-      setState(() {
-        _isProcessing = false;
-        _isPlaying = false;
-        if (startRecordingAfter) {
-          _isInitializing = false;
-          _statusText = 'Tap to speak';
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _isPlaying = false;
+        });
+      }
     }
   }
 
   Future<void> _endWorkout() async {
+    await _stopListening();
+    
+    try {
+      await _audioPlayer.stop();
+    } catch (e) {
+      // Ignore
+    }
+
     if (_currentWorkout != null) {
-      // If workout has no exercises, delete it instead of completing
       if (_currentWorkout!.exercises.isEmpty) {
         await WorkoutService.deleteWorkout(_currentWorkout!);
       } else {
@@ -438,7 +538,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       }
     }
     
-    // Clear the workout store
     if (mounted) {
       context.read<ActiveWorkoutStore>().endWorkout();
       Navigator.of(context).pop();
@@ -600,30 +699,18 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   }
   
   Future<void> _stopAllAudioAndRecording() async {
-    // Stop recording if in progress
-    if (_isRecording) {
-      try {
-        await _audioRecorder.stop();
-      } catch (e) {
-        // Ignore errors when stopping
-      }
-    }
+    await _stopListening();
     
-    // Stop audio playback if playing
     try {
       await _audioPlayer.stop();
     } catch (e) {
-      // Ignore errors when stopping
+      // Ignore
     }
     
-    // Reset states
     if (mounted) {
       setState(() {
-        _isRecording = false;
         _isProcessing = false;
         _isPlaying = false;
-        _isInitializing = false;
-        _statusText = 'Tap to speak';
       });
     }
   }
@@ -717,14 +804,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     
     return GestureDetector(
       onTap: () async {
-        // Stop all audio and recording before switching tabs
         await _stopAllAudioAndRecording();
         
         setState(() {
           _selectedTab = index;
         });
-        // Dismiss keyboard when switching tabs
         FocusScope.of(context).unfocus();
+        
+        // Auto-start listening when switching to voice tab
+        if (index == 0) {
+          await _startListening();
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -762,6 +852,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   }
   
   Widget _buildVoiceContent() {
+    final bool isActive = _speechDetected && _isListening;
+    
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -777,32 +869,37 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           
           const SizedBox(height: 40),
           
-          // Hero sphere
+          // Sphere -- tap to force-send if VAD hasn't triggered
           GestureDetector(
-            onTap: _handleTap,
+            onTap: () {
+              if (_speechDetected && _isListening) {
+                debugPrint('[VAD] Manual tap — force sending');
+                _finishAndSend();
+              }
+            },
             child: Hero(
               tag: 'workout_sphere',
               child: PulsingParticleSphere(
                 size: 240,
-                primaryColor: _isRecording 
-                    ? AppColors.recordingPrimary
-                    : AppColors.primary,
-                secondaryColor: _isRecording
-                    ? AppColors.recordingSecondary
-                    : AppColors.primaryLight,
-                accentColor: _isRecording
-                    ? AppColors.recordingAccent
-                    : AppColors.primaryDark,
-                highlightColor: _isRecording
-                    ? AppColors.recordingHighlight
-                    : AppColors.primary,
+              primaryColor: isActive
+                  ? AppColors.recordingPrimary
+                  : AppColors.primary,
+              secondaryColor: isActive
+                  ? AppColors.recordingSecondary
+                  : AppColors.primaryLight,
+              accentColor: isActive
+                  ? AppColors.recordingAccent
+                  : AppColors.primaryDark,
+              highlightColor: isActive
+                  ? AppColors.recordingHighlight
+                  : AppColors.primary,
               ),
             ),
           ),
           
           const SizedBox(height: 40),
           
-          // Rest timer module (appears below sphere)
+          // Rest timer module
           if (_showRestTimer)
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
@@ -817,7 +914,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
               ),
             ),
           
-          // Workout results (appears below sphere with fade)
+          // Workout results
           if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
@@ -837,11 +934,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           
           // Hint text
           Text(
-            _isRecording 
-                ? 'Tap when finished'
-                : _isProcessing || _isPlaying || _isInitializing
+            _isProcessing
+                ? ''
+                : _isPlaying
                     ? ''
-                    : 'Speak your sets',
+                    : _isListening
+                        ? 'Speak naturally — hands free'
+                        : '',
             style: AppStyles.questionSubtext().copyWith(
               fontSize: 14,
             ),
