@@ -30,7 +30,7 @@ import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
 
 // DEBUG FLAG: Set to true to always show onboarding flow
-const bool kForceShowOnboarding = false;
+const bool kForceShowOnboarding = true;
 
 
 void main() async {

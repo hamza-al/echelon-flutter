@@ -129,12 +129,22 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       await SplitService.setSplit(selectedSplitObj);
     }
 
+    // Calculate training days from the selected split
+    final selectedSplitObj = WorkoutSplit.getAllSplits()
+        .firstWhere((s) => s.splitType == _selectedSplit);
+    final trainingDays =
+        selectedSplitObj.dayNames.where((d) => d != 'Rest').length;
+
     // Navigate to processing screen → voice demo → paywall
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => OnboardingProcessingScreen(
             nutritionGoal: _onboardingData.nutritionGoal ?? 'maintain',
+            targetCalories: _onboardingData.targetCalories,
+            splitName: _selectedSplit!,
+            trainingDays: trainingDays,
+            goals: _onboardingData.goals,
             onContinue: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
