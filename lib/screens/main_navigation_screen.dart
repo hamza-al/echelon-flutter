@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import 'progress_screen.dart';
 import 'nutrition_screen.dart';
 import 'coach_chat_screen.dart';
+import 'timer_screen.dart';
 import '../stores/nutrition_store.dart';
+import '../widgets/pulsing_particle_sphere.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -15,20 +17,12 @@ class MainNavigationScreen extends StatefulWidget {
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 1; // Start on middle (Workout) page
-  final PageController _pageController = PageController(initialPage: 1);
-
-  final List<Widget> _screens = [
-    const ProgressScreen(),
-    const HomeScreen(),
-    const NutritionScreen(),
-    CoachChatScreen(onNavigateBack: () {}), // Will be updated in build
-  ];
+  int _currentIndex = 0;
+  final PageController _pageController = PageController(initialPage: 0);
 
   @override
   void initState() {
     super.initState();
-    // Initialize nutrition store to load today's data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NutritionStore>().initialize();
     });
@@ -41,9 +35,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _onPageChanged(int index) {
-    // Dismiss keyboard when changing tabs
     FocusManager.instance.primaryFocus?.unfocus();
-    
     setState(() {
       _currentIndex = index;
     });
@@ -57,91 +49,163 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+  static const _iconPaths = [
+    'assets/ionicons.designerpack/stats-chart.svg',
+    'assets/ionicons.designerpack/chatbubble.svg',
+    'assets/progress-ring.svg',
+    'assets/ionicons.designerpack/restaurant.svg',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Main content
           PageView(
             controller: _pageController,
             onPageChanged: _onPageChanged,
             physics: const PageScrollPhysics(),
-            children: [
-              _screens[0],
-              _screens[1],
-              _screens[2],
-              CoachChatScreen(
-                onNavigateBack: () => _onNavTapped(2), // Go to Nutrition tab
-              ),
+            children: const [
+              ProgressScreen(),
+              CoachChatScreen(),
+              TimerScreen(),
+              NutritionScreen(),
+              HomeScreen(),
             ],
           ),
-          
-          // Floating navigation bar
+
+          // Bottom bar area
           Positioned(
-            left: 80,
-            right: 80,
+            left: 0,
+            right: 0,
             bottom: 10,
-            child: AnimatedOpacity(
-              opacity: _currentIndex == 3 ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 50),
-              child: IgnorePointer(
-                ignoring: _currentIndex == 3,
-                child: SafeArea(
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1C1C1E),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withOpacity(0.1),
-                          blurRadius: 40,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 0),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    // Glass nav bar (3 tabs)
+                    Expanded(
+                      child: SizedBox(
+                        height: 56,
+                        child: CustomPaint(
+                          painter: _GlassNavPainter(),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final tabWidth = constraints.maxWidth / 4;
+                              const pillW = 52.0;
+                              const pillH = 43.0;
+                              final clampedIndex =
+                                  _currentIndex.clamp(0, 3);
+                              return Stack(
+                                children: [
+                                  AnimatedPositioned(
+                                    duration:
+                                        const Duration(milliseconds: 250),
+                                    curve: Curves.easeOutCubic,
+                                    left: (_currentIndex <= 3
+                                            ? clampedIndex
+                                            : -1) *
+                                        tabWidth +
+                                        (tabWidth - pillW) / 2,
+                                    top: (56 - pillH) / 2,
+                                    child: AnimatedOpacity(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      opacity:
+                                          _currentIndex <= 3 ? 1.0 : 0.0,
+                                      child: Container(
+                                        width: pillW,
+                                        height: pillH,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.10),
+                                          borderRadius:
+                                              BorderRadius.circular(19),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: List.generate(4, (i) {
+                                      final isSelected =
+                                          _currentIndex == i;
+                                      return Expanded(
+                                        child: GestureDetector(
+                                          onTap: () => _onNavTapped(i),
+                                          behavior:
+                                              HitTestBehavior.opaque,
+                                          child: SizedBox(
+                                            height: 56,
+                                            child: Center(
+                                              child: _iconPaths[i] ==
+                                                      'assets/progress-ring.svg'
+                                                  ? Opacity(
+                                                      opacity: isSelected
+                                                          ? 1.0
+                                                          : 0.4,
+                                                      child: SvgPicture.asset(
+                                                        _iconPaths[i],
+                                                        width: 22,
+                                                        height: 22,
+                                                      ),
+                                                    )
+                                                  : SvgPicture.asset(
+                                                      _iconPaths[i],
+                                                      width: 22,
+                                                      height: 22,
+                                                      colorFilter:
+                                                          ColorFilter.mode(
+                                                        isSelected
+                                                            ? Colors.white
+                                                            : Colors.white
+                                                                .withValues(
+                                                                    alpha:
+                                                                        0.4),
+                                                        BlendMode.srcIn,
+                                                      ),
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                         ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.6),
-                          blurRadius: 30,
-                          spreadRadius: -5,
-                          offset: const Offset(0, 15),
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 60,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 25),
-                        ),
-                      ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildNavItem(
-                          icon: Icons.bar_chart_rounded,
-                          label: 'Progress',
-                          index: 0,
+
+                    const SizedBox(width: 12),
+
+                    // Floating workout orb button
+                    GestureDetector(
+                      onTap: () => _onNavTapped(4),
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF111111),
+                          border: Border.all(
+                            color: _currentIndex == 4
+                                ? Colors.white.withValues(alpha: 0.20)
+                                : Colors.white.withValues(alpha: 0.10),
+                            width: 0.5,
+                          ),
                         ),
-                        _buildNavItem(
-                          icon: Icons.fitness_center,
-                          label: 'Workout',
-                          index: 1,
-                          isMain: true,
+                        child: Center(
+                          child: PulsingParticleSphere(
+                            size: 36,
+                          ),
                         ),
-                        _buildNavItem(
-                          icon: Icons.restaurant_outlined,
-                          label: 'Nutrition',
-                          index: 2,
-                        ),
-                        _buildNavItem(
-                          icon: Icons.forum_rounded,
-                          label: 'Coach',
-                          index: 3,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
@@ -150,28 +214,58 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    bool isMain = false,
-  }) {
-    final isSelected = _currentIndex == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _onNavTapped(index),
-        behavior: HitTestBehavior.opaque,
-        child: Center(
-          child: Icon(
-            icon,
-            color: isSelected ? Colors.white : Colors.grey[600],
-            size: 24,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
+class _GlassNavPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(32));
+
+    final fill = Paint()..color = const Color(0xFF111111);
+    canvas.drawRRect(rr, fill);
+
+    final borderPath = Path()..addRRect(rr);
+
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.18),
+          Colors.white.withValues(alpha: 0.18),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.15, 0.85, 1.0],
+      ).createShader(rect);
+
+    canvas.drawPath(borderPath, borderPaint);
+
+    final topHighlight = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.12),
+          Colors.white.withValues(alpha: 0.12),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.2, 0.8, 1.0],
+      ).createShader(rect);
+
+    canvas.drawLine(
+      Offset(32, 0.25),
+      Offset(size.width - 32, 0.25),
+      topHighlight,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

@@ -28,7 +28,6 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
   void initState() {
     super.initState();
     _parseInitialValues();
-    // Update values after first frame to ensure callbacks are ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateValues();
     });
@@ -58,83 +57,61 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final topPadding = screenHeight * 0.04;
-    final pickerHeight = (screenHeight * 0.25).clamp(150.0, 180.0);
-    
-    return SingleChildScrollView(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: MediaQuery.of(context).size.height - 160,
+    final pickerHeight = (screenHeight * 0.28).clamp(160.0, 220.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'About you',
+            style: AppStyles.questionText().copyWith(fontSize: 26),
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: topPadding),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Quick physical info',
-                    style: AppStyles.questionText(),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'For personalized coaching',
-                    style: AppStyles.questionSubtext(),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.05),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildWeightPicker(pickerHeight),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildHeightPicker(pickerHeight),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'You can change this anytime',
-              style: AppStyles.questionSubtext().copyWith(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'For personalized coaching',
+            style: AppStyles.questionSubtext(),
+          ),
         ),
-      ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Expanded(child: _buildWeightPicker(pickerHeight)),
+              const SizedBox(width: 20),
+              Expanded(child: _buildHeightPicker(pickerHeight)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+        Center(
+          child: Text(
+            'You can update this anytime',
+            style: AppStyles.caption(),
+          ),
+        ),
+        const Spacer(),
+      ],
     );
   }
 
   Widget _buildWeightPicker(double pickerHeight) {
-    final itemExtent = (pickerHeight / 4).clamp(35.0, 45.0);
-    final selectedFontSize = (itemExtent * 0.65).clamp(24.0, 28.0);
-    final unselectedFontSize = (itemExtent * 0.42).clamp(16.0, 18.0);
-    
+    final itemExtent = (pickerHeight / 4).clamp(38.0, 48.0);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Weight',
-          style: AppStyles.questionSubtext().copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          'WEIGHT',
+          style: AppStyles.label().copyWith(letterSpacing: 1.5, fontSize: 11),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
           height: pickerHeight,
           child: ListWheelScrollView.useDelegate(
@@ -155,48 +132,42 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
                 final value = index + 80;
                 final isSelected = value == _weightLbs;
                 return Center(
-                  child: Text(
-                    '$value',
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 150),
                     style: AppStyles.mainText().copyWith(
-                      fontSize: isSelected ? selectedFontSize : unselectedFontSize,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                      fontSize: isSelected ? 28 : 17,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w300,
                       color: isSelected
-                          ? AppColors.accent
-                          : AppColors.accent.withOpacity(0.4),
+                          ? AppColors.textPrimary
+                          : AppColors.textMuted,
                     ),
+                    child: Text('$value'),
                   ),
                 );
               },
-              childCount: 321, // 80-400 lbs
+              childCount: 321,
             ),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          'lbs',
-          style: AppStyles.questionSubtext().copyWith(fontSize: 11),
-        ),
+        const SizedBox(height: 8),
+        Text('lbs', style: AppStyles.caption()),
       ],
     );
   }
 
   Widget _buildHeightPicker(double pickerHeight) {
-    final itemExtent = (pickerHeight / 4).clamp(35.0, 45.0);
-    final selectedFontSize = (itemExtent * 0.65).clamp(24.0, 28.0);
-    final unselectedFontSize = (itemExtent * 0.42).clamp(16.0, 18.0);
-    final wheelWidth = (MediaQuery.of(context).size.width * 0.14).clamp(50.0, 65.0);
-    
+    final itemExtent = (pickerHeight / 4).clamp(38.0, 48.0);
+    const wheelWidth = 55.0;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Height',
-          style: AppStyles.questionSubtext().copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+          'HEIGHT',
+          style: AppStyles.label().copyWith(letterSpacing: 1.5, fontSize: 11),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -221,28 +192,27 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
                     final value = index + 4;
                     final isSelected = value == _feet;
                     return Center(
-                      child: Text(
-                        '$value',
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 150),
                         style: AppStyles.mainText().copyWith(
-                          fontSize: isSelected ? selectedFontSize : unselectedFontSize,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                          fontSize: isSelected ? 28 : 17,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w300,
                           color: isSelected
-                              ? AppColors.accent
-                              : AppColors.accent.withOpacity(0.4),
+                              ? AppColors.textPrimary
+                              : AppColors.textMuted,
                         ),
+                        child: Text('$value'),
                       ),
                     );
                   },
-                  childCount: 5, // 4-8 feet
+                  childCount: 5,
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text(
-                'ft',
-                style: AppStyles.questionSubtext().copyWith(fontSize: 10),
-              ),
+              child: Text('ft', style: AppStyles.caption()),
             ),
             SizedBox(
               width: wheelWidth,
@@ -262,31 +232,29 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
                 },
                 childDelegate: ListWheelChildBuilderDelegate(
                   builder: (context, index) {
-                    final value = index;
-                    final isSelected = value == _inches;
+                    final isSelected = index == _inches;
                     return Center(
-                      child: Text(
-                        '$value',
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 150),
                         style: AppStyles.mainText().copyWith(
-                          fontSize: isSelected ? selectedFontSize : unselectedFontSize,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                          fontSize: isSelected ? 28 : 17,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w300,
                           color: isSelected
-                              ? AppColors.accent
-                              : AppColors.accent.withOpacity(0.4),
+                              ? AppColors.textPrimary
+                              : AppColors.textMuted,
                         ),
+                        child: Text('$index'),
                       ),
                     );
                   },
-                  childCount: 12, // 0-11 inches
+                  childCount: 12,
                 ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text(
-                'in',
-                style: AppStyles.questionSubtext().copyWith(fontSize: 10),
-              ),
+              child: Text('in', style: AppStyles.caption()),
             ),
           ],
         ),
@@ -294,4 +262,3 @@ class _PhysicalDataStepState extends State<PhysicalDataStep> {
     );
   }
 }
-

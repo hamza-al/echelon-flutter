@@ -15,64 +15,57 @@ class SplitSelectionStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final splits = WorkoutSplit.getAllSplits()
-        .where((s) => s.splitType != 'Custom') // Exclude custom from onboarding
+        .where((s) => s.splitType != 'Custom')
         .toList();
 
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Choose Your Split',
-          style: AppStyles.mainHeader().copyWith(fontSize: 32),
-          textAlign: TextAlign.center,
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Training split',
+            style: AppStyles.questionText().copyWith(fontSize: 26),
+          ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Select a training schedule that fits your goals',
-          style: AppStyles.questionSubtext().copyWith(fontSize: 15),
-          textAlign: TextAlign.center,
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Choose what fits your schedule',
+            style: AppStyles.questionSubtext(),
+          ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 28),
         Expanded(
-          child: ListView.builder(
+          child: ListView.separated(
             itemCount: splits.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final split = splits[index];
               final isSelected = selectedSplit == split.splitType;
-              
+
               return GestureDetector(
                 onTap: () => onSplitSelected(split.splitType),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: isSelected 
-                        ? AppColors.primaryLight.withOpacity(0.12)
-                        : AppColors.background,
-                    borderRadius: BorderRadius.circular(16),
+                    color: isSelected
+                        ? AppColors.textPrimary.withValues(alpha: 0.08)
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected 
-                          ? AppColors.primaryLight 
-                          : AppColors.accent.withOpacity(0.2),
-                      width: isSelected ? 2 : 1,
+                      color: isSelected
+                          ? AppColors.textPrimary.withValues(alpha: 0.25)
+                          : AppColors.border,
+                      width: 1,
                     ),
                   ),
                   child: Row(
                     children: [
-                      // Purple tab
-                      Container(
-                        width: 3,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                              ? AppColors.primaryLight 
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1.5),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      
-                      // Content
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,32 +74,41 @@ class SplitSelectionStep extends StatelessWidget {
                               split.splitType,
                               style: AppStyles.mainText().copyWith(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected 
-                                    ? AppColors.primaryLight 
-                                    : AppColors.accent,
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? AppColors.textPrimary
+                                    : AppColors.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 5),
                             Text(
-                              split.dayNames.where((d) => d != 'Rest').join(' • '),
-                              style: AppStyles.mainText().copyWith(
-                                fontSize: 12,
-                                color: AppColors.accent.withOpacity(0.6),
-                              ),
+                              split.dayNames
+                                  .where((d) => d != 'Rest')
+                                  .join(' · '),
+                              style: AppStyles.caption(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      
-                      if (isSelected)
-                        const Icon(
-                          Icons.check_circle,
-                          color: AppColors.primaryLight,
-                          size: 24,
+                      AnimatedOpacity(
+                        opacity: isSelected ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.textPrimary,
+                          ),
+                          child: const Icon(
+                            Icons.check_rounded,
+                            size: 14,
+                            color: AppColors.background,
+                          ),
                         ),
+                      ),
                     ],
                   ),
                 ),

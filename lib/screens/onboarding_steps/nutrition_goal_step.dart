@@ -28,9 +28,9 @@ class _NutritionGoalStepState extends State<NutritionGoalStep> {
   };
 
   final Map<String, String> _goalDescriptions = {
-    'cut': 'Lose fat while maintaining muscle',
-    'bulk': 'Build muscle and gain weight',
-    'maintain': 'Maintain current weight',
+    'cut': 'Lose fat, keep muscle',
+    'bulk': 'Build muscle, gain size',
+    'maintain': 'Stay where you are',
   };
 
   @override
@@ -59,152 +59,178 @@ class _NutritionGoalStepState extends State<NutritionGoalStep> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          SizedBox(height: screenHeight * 0.02),
-          
-          // Title
-          Text(
-            'Nutrition Goal',
-            style: AppStyles.questionText(),
-            textAlign: TextAlign.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Nutrition goal',
+            style: AppStyles.questionText().copyWith(fontSize: 26),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose your goal',
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'This shapes your daily targets',
             style: AppStyles.questionSubtext(),
-            textAlign: TextAlign.center,
           ),
-          
-          SizedBox(height: screenHeight * 0.04),
-          
-          // Goal options
-          ...['cut', 'bulk', 'maintain'].map((goal) {
-            final isSelected = _selectedGoal == goal;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: GestureDetector(
-                onTap: () => _selectGoal(goal),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withOpacity(0.15)
-                        : AppColors.cardBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.accent.withOpacity(0.15),
-                      width: isSelected ? 2 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        const SizedBox(height: 28),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                ...['cut', 'bulk', 'maintain'].map((goal) {
+                  final isSelected = _selectedGoal == goal;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GestureDetector(
+                      onTap: () => _selectGoal(goal),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.textPrimary.withValues(alpha: 0.08)
+                              : AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.textPrimary.withValues(alpha: 0.25)
+                                : AppColors.border,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              goal.toUpperCase(),
-                              style: AppStyles.mainText().copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.2,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    goal[0].toUpperCase() + goal.substring(1),
+                                    style: AppStyles.mainText().copyWith(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _goalDescriptions[goal]!,
+                                    style: AppStyles.caption().copyWith(
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _goalDescriptions[goal]!,
-                              style: AppStyles.questionSubtext().copyWith(
-                                fontSize: 13,
+                            AnimatedOpacity(
+                              opacity: isSelected ? 1.0 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.textPrimary,
+                                ),
+                                child: const Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: AppColors.background,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      if (isSelected)
-                        Icon(
-                          Icons.check_circle,
-                          color: AppColors.primary,
-                          size: 24,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          
-          if (_selectedGoal != null) ...[
-            SizedBox(height: screenHeight * 0.04),
-            
-            // Calorie adjuster
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.accent.withOpacity(0.15),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Daily Calorie Target',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
+                  );
+                }),
+                if (_selectedGoal != null) ...[
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: () => _adjustCalories(-50),
-                        icon: Icon(
-                          Icons.remove_circle_outline,
-                          color: AppColors.accent.withOpacity(0.7),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'DAILY TARGET',
+                          style: AppStyles.label()
+                              .copyWith(letterSpacing: 1.5, fontSize: 11),
                         ),
-                      ),
-                      const SizedBox(width: 20),
-                      Text(
-                        _targetCalories.toString(),
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _adjustCalories(-50),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.surfaceLight,
+                                ),
+                                child: const Icon(
+                                  Icons.remove_rounded,
+                                  color: AppColors.textSecondary,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 28),
+                            Text(
+                              _targetCalories.toString(),
+                              style: AppStyles.mainHeader().copyWith(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 28),
+                            GestureDetector(
+                              onTap: () => _adjustCalories(50),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.surfaceLight,
+                                ),
+                                child: const Icon(
+                                  Icons.add_rounded,
+                                  color: AppColors.textSecondary,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 20),
-                      IconButton(
-                        onPressed: () => _adjustCalories(50),
-                        icon: Icon(
-                          Icons.add_circle_outline,
-                          color: AppColors.accent.withOpacity(0.7),
+                        const SizedBox(height: 10),
+                        Text(
+                          'calories per day',
+                          style: AppStyles.caption(),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'calories per day',
-                    style: AppStyles.questionSubtext().copyWith(
-                      fontSize: 13,
+                      ],
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
 }
-

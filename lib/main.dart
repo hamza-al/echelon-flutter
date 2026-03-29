@@ -30,7 +30,7 @@ import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
 
 // DEBUG FLAG: Set to true to always show onboarding flow
-const bool kForceShowOnboarding = true;
+const bool kForceShowOnboarding = false;
 
 
 void main() async {
@@ -117,9 +117,12 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: AppColors.background,
           colorScheme: ColorScheme.dark(
             surface: AppColors.background,
-            primary: AppColors.accent,
-            onSurface: AppColors.accent,
+            primary: AppColors.textPrimary,
+            onSurface: AppColors.textPrimary,
           ),
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          splashFactory: NoSplash.splashFactory,
         ),
         home: const AppInitializer(),
         routes: {

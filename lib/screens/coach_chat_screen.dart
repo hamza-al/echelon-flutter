@@ -40,7 +40,6 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
     final authService = context.read<AuthService>();
     final coachService = CoachChatService(authService);
 
-    // Send message using the service
     await CoachChatService.sendMessageWithStore(
       service: coachService,
       userMessage: message,
@@ -48,7 +47,6 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
       nutritionStore: nutritionStore,
     );
 
-    // Scroll to bottom after sending
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         0,
@@ -61,302 +59,247 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // Dismiss keyboard when tapping outside
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: SafeArea(
           child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.chevron_left,
-                      color: AppColors.accent,
-                      size: 28,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Coach',
+                        style: AppStyles.mainHeader().copyWith(fontSize: 30),
+                      ),
                     ),
-                    onPressed: widget.onNavigateBack,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Coach',
-                          style: AppStyles.mainHeader().copyWith(
-                            fontSize: 30,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Your AI fitness coach',
-                          style: AppStyles.questionSubtext(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Clear chat button
-                  Consumer<CoachChatStore>(
-                    builder: (context, store, _) {
-                      if (!store.hasMessages) return const SizedBox.shrink();
-                      
-                      return IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          color: AppColors.accent.withOpacity(0.5),
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              backgroundColor: AppColors.background,
-                              title: Text(
-                                'Clear Chat?',
-                                style: AppStyles.mainText().copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              content: Text(
-                                'This will delete all messages in this conversation.',
-                                style: AppStyles.questionSubtext(),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(
-                                    'Cancel',
-                                    style: AppStyles.mainText().copyWith(
-                                      color: AppColors.accent.withOpacity(0.6),
-                                    ),
+                    Consumer<CoachChatStore>(
+                      builder: (context, store, _) {
+                        if (!store.hasMessages) return const SizedBox.shrink();
+                        return GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                backgroundColor: AppColors.background,
+                                title: Text(
+                                  'Clear Chat?',
+                                  style: AppStyles.mainText().copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    store.clearMessages();
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text(
-                                    'Clear',
-                                    style: AppStyles.mainText().copyWith(
-                                      color: AppColors.primaryLight,
-                                      fontWeight: FontWeight.w600,
+                                content: Text(
+                                  'This will delete all messages in this conversation.',
+                                  style: AppStyles.questionSubtext(),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      'Cancel',
+                                      style: AppStyles.mainText().copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      store.clearMessages();
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(
+                                      'Clear',
+                                      style: AppStyles.mainText().copyWith(
+                                        color: AppColors.primaryLight,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.delete_outline,
+                            color: AppColors.textMuted,
+                            size: 22,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => FocusScope.of(context).unfocus(),
+                  child: Consumer<CoachChatStore>(
+                    builder: (context, store, _) {
+                      if (store.messages.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 40),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'What\'s on\nyour mind?',
+                                  textAlign: TextAlign.center,
+                                  style: AppStyles.mainHeader().copyWith(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w300,
+                                    height: 1.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Ask about your training, dial in your nutrition, or just talk through what\'s next.',
+                                  textAlign: TextAlign.center,
+                                  style: AppStyles.mainText().copyWith(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                    height: 1.5,
                                   ),
                                 ),
                               ],
                             ),
-                          );
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        controller: _scrollController,
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
+                        itemCount:
+                            store.messages.length + (store.isLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == 0 && store.isLoading) {
+                            return _buildLoadingBubble();
+                          }
+                          final messageIndex =
+                              store.isLoading ? index - 1 : index;
+                          final message =
+                              store.messages.reversed.toList()[messageIndex];
+                          final isLatestAssistantMessage = !message.isUser &&
+                              messageIndex == 0 &&
+                              !store.isLoading;
+                          return _buildMessageBubble(
+                              message, isLatestAssistantMessage);
                         },
                       );
                     },
                   ),
-                ],
-              ),
-            ),
-
-            // Messages List
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  // Dismiss keyboard when tapping in the messages area
-                  FocusScope.of(context).unfocus();
-                },
-                child: Consumer<CoachChatStore>(
-                builder: (context, store, _) {
-                  if (store.messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 64,
-                            color: AppColors.accent.withOpacity(0.3),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Start a conversation',
-                            style: AppStyles.mainText().copyWith(
-                              color: AppColors.accent.withOpacity(0.5),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 48),
-                            child: Text(
-                              'Ask about workouts, nutrition, or get personalized advice',
-                              style: AppStyles.questionSubtext().copyWith(
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 30),
-                    itemCount: store.messages.length + (store.isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // Show loading indicator at the top
-                      if (index == 0 && store.isLoading) {
-                        return _buildLoadingBubble();
-                      }
-                      
-                      final messageIndex = store.isLoading ? index - 1 : index;
-                      final message = store.messages.reversed.toList()[messageIndex];
-                      final isLatestAssistantMessage = 
-                          !message.isUser && messageIndex == 0 && !store.isLoading;
-                      return _buildMessageBubble(message, isLatestAssistantMessage);
-                    },
-                  );
-                },
-              ),
-              ),
-            ),
-
-            // Error message
-            Consumer<CoachChatStore>(
-              builder: (context, store, _) {
-                if (store.error == null) return const SizedBox.shrink();
-                
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.red.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Colors.red.shade300,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          store.error!,
-                          style: AppStyles.mainText().copyWith(
-                            fontSize: 13,
-                            color: Colors.red.shade300,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          color: Colors.red.shade300,
-                          size: 18,
-                        ),
-                        onPressed: () => store.clearError(),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            // Input Area
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                border: Border(
-                  top: BorderSide(
-                    color: AppColors.accent.withOpacity(0.1),
-                    width: 1,
-                  ),
                 ),
               ),
-              child: Consumer<CoachChatStore>(
+
+              Consumer<CoachChatStore>(
                 builder: (context, store, _) {
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          style: AppStyles.mainText().copyWith(fontSize: 15),
-                          decoration: InputDecoration(
-                            hintText: 'Ask your coach...',
-                            hintStyle: AppStyles.questionSubtext().copyWith(
-                              fontSize: 15,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(
-                                color: AppColors.primary.withOpacity(0.3),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(
-                                color: AppColors.primary.withOpacity(0.3),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide(
-                                color: AppColors.primaryLight,
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            filled: true,
-                            fillColor: AppColors.primary.withOpacity(0.05),
-                          ),
-                          maxLines: 5,
-                          minLines: 1,
-                          textCapitalization: TextCapitalization.sentences,
-                          enabled: !store.isLoading,
-                          onSubmitted: (_) => _sendMessage(),
-                        ),
+                  if (store.error == null) return const SizedBox.shrink();
+                  return Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: store.isLoading
-                              ? AppColors.primaryLight.withOpacity(0.5)
-                              : AppColors.primaryLight,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.send,
-                            color: AppColors.background,
-                            size: 22,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline,
+                            color: Colors.red.shade300, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            store.error!,
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 13,
+                              color: Colors.red.shade300,
+                            ),
                           ),
-                          onPressed: store.isLoading ? null : _sendMessage,
                         ),
-                      ),
-                    ],
+                        GestureDetector(
+                          onTap: () => store.clearError(),
+                          child: Icon(Icons.close,
+                              color: Colors.red.shade300, size: 18),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
-            ),
-          ],
+
+              // Frosted glass input bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+                child: Consumer<CoachChatStore>(
+                  builder: (context, store, _) {
+                    return CustomPaint(
+                      painter: _GlassInputPainter(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _messageController,
+                                style: AppStyles.mainText()
+                                    .copyWith(fontSize: 15),
+                                decoration: InputDecoration(
+                                  hintText: 'Ask your coach...',
+                                  hintStyle: AppStyles.questionSubtext()
+                                      .copyWith(fontSize: 15),
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                ),
+                                maxLines: 5,
+                                minLines: 1,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                enabled: !store.isLoading,
+                                onSubmitted: (_) => _sendMessage(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: store.isLoading ? null : _sendMessage,
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: store.isLoading
+                                      ? Colors.white.withValues(alpha: 0.06)
+                                      : Colors.white.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Icon(
+                                  Icons.arrow_upward_rounded,
+                                  color: store.isLoading
+                                      ? Colors.white.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.8),
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -366,9 +309,8 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const PulsingParticleSphere(
+        children: const [
+          PulsingParticleSphere(
             size: 40,
             primaryColor: AppColors.primary,
             secondaryColor: AppColors.primaryLight,
@@ -383,17 +325,17 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
   MarkdownStyleSheet get _assistantMarkdownStyle => MarkdownStyleSheet(
         p: AppStyles.mainText().copyWith(
           fontSize: 15,
-          color: AppColors.accent,
+          color: AppColors.textPrimary,
         ),
         strong: AppStyles.mainText().copyWith(
           fontSize: 15,
           fontWeight: FontWeight.w700,
-          color: AppColors.accent,
+          color: AppColors.textPrimary,
         ),
         em: AppStyles.mainText().copyWith(
           fontSize: 15,
           fontStyle: FontStyle.italic,
-          color: AppColors.accent,
+          color: AppColors.textPrimary,
         ),
         code: AppStyles.mainText().copyWith(
           fontSize: 14,
@@ -407,8 +349,10 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
         ),
       );
 
-  Widget _buildMessageBubble(ChatMessage message, bool isNewAssistantMessage) {
-    final shouldFadeIn = isNewAssistantMessage && !_animatedMessageIds.contains(message.id);
+  Widget _buildMessageBubble(
+      ChatMessage message, bool isNewAssistantMessage) {
+    final shouldFadeIn =
+        isNewAssistantMessage && !_animatedMessageIds.contains(message.id);
     if (shouldFadeIn) {
       _animatedMessageIds.add(message.id);
     }
@@ -451,21 +395,6 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
               child: content,
             ),
           ),
-          if (message.isUser)
-            Container(
-              width: 32,
-              height: 32,
-              margin: const EdgeInsets.only(left: 12),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person,
-                size: 18,
-                color: AppColors.accent,
-              ),
-            ),
         ],
       ),
     );
@@ -476,6 +405,38 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
 
     return bubble;
   }
+}
+
+class _GlassInputPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(24));
+
+    final fill = Paint()..color = const Color(0xFF111111);
+    canvas.drawRRect(rr, fill);
+
+    final borderPath = Path()..addRRect(rr);
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.15),
+          Colors.white.withValues(alpha: 0.15),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.12, 0.88, 1.0],
+      ).createShader(rect);
+
+    canvas.drawPath(borderPath, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _FadeInWidget extends StatefulWidget {
@@ -514,4 +475,3 @@ class _FadeInWidgetState extends State<_FadeInWidget>
     return FadeTransition(opacity: _opacity, child: widget.child);
   }
 }
-

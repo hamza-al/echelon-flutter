@@ -12,12 +12,61 @@ class LandingPage extends StatefulWidget {
   State<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class _LandingPageState extends State<LandingPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _orbOpacity;
+  late Animation<double> _titleOpacity;
+  late Animation<double> _subtitleOpacity;
+  late Animation<double> _tagsOpacity;
+  late Animation<double> _buttonOpacity;
+  late Animation<Offset> _buttonSlide;
+
   @override
   void initState() {
     super.initState();
-    // Register device when landing page opens
     _registerDevice();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+
+    _orbOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+    );
+    _titleOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.15, 0.5, curve: Curves.easeOut),
+    );
+    _subtitleOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.25, 0.6, curve: Curves.easeOut),
+    );
+    _tagsOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.35, 0.7, curve: Curves.easeOut),
+    );
+    _buttonOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 0.85, curve: Curves.easeOut),
+    );
+    _buttonSlide = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 0.85, curve: Curves.easeOutCubic),
+    ));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _registerDevice() async {
@@ -27,85 +76,126 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  // Make sphere responsive to taps - show a brief animation or feedback
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Ready to transform your fitness journey?',
-                        style: AppStyles.mainText().copyWith(fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                      backgroundColor: AppColors.primaryLight.withOpacity(0.9),
-                      duration: const Duration(milliseconds: 1500),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                },
-                child: const PulsingParticleSphere(
-                  size: 200,
-                  primaryColor: AppColors.primary,
-                  secondaryColor: AppColors.primaryLight,
-                  accentColor: AppColors.primaryDark,
-                  highlightColor: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                'Echelon',
-                style: AppStyles.mainHeader(),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Push the boundaries of your \nphysical limits',
-                style: AppStyles.mainText().copyWith(
-                  color: AppColors.accent.withOpacity(0.75),
-                ),
-                textAlign: TextAlign.center,
-              ),
+    final screenHeight = MediaQuery.of(context).size.height;
+    final sphereSize = (screenHeight * 0.32).clamp(200.0, 300.0);
 
-              const SizedBox(height: 25),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => const OnboardingFlow(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    'Start Training',
-                    style: AppStyles.mainText().copyWith(
-                      color: AppColors.background,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+    return Scaffold(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0, -0.3),
+                  radius: 0.85,
+                  colors: [
+                    const Color(0xFF110E18),
+                    AppColors.background,
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+
+                  FadeTransition(
+                    opacity: _orbOpacity,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: sphereSize * 1.6,
+                          height: sphereSize * 1.6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF7C3AED)
+                                    .withValues(alpha: 0.08),
+                                const Color(0xFFA78BFA)
+                                    .withValues(alpha: 0.03),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.0, 0.5, 1.0],
+                            ),
+                          ),
+                        ),
+                        PulsingParticleSphere(size: sphereSize),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(flex: 3),
+
+                  FadeTransition(
+                    opacity: _titleOpacity,
+                    child: Text(
+                      'Echelon',
+                      style: AppStyles.mainHeader().copyWith(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  FadeTransition(
+                    opacity: _subtitleOpacity,
+                    child: Text(
+                      'Voice-powered coaching',
+                      style: AppStyles.mainText().copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  FadeTransition(
+                    opacity: _tagsOpacity,
+                    child: Text(
+                      'Strength  ·  Nutrition  ·  Voice',
+                      style: AppStyles.caption().copyWith(
+                        letterSpacing: 1,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  SlideTransition(
+                    position: _buttonSlide,
+                    child: FadeTransition(
+                      opacity: _buttonOpacity,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const OnboardingFlow(),
+                              ),
+                            );
+                          },
+                          style: AppStyles.primaryButton(),
+                          child: const Text('Begin'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-

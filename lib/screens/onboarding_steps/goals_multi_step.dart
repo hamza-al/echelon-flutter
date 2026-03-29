@@ -50,47 +50,42 @@ class _GoalsMultiStepState extends State<GoalsMultiStep> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final topPadding = screenHeight * 0.04;
-    
-    return SingleChildScrollView(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: MediaQuery.of(context).size.height - 160,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'What drives you?',
+            style: AppStyles.questionText().copyWith(fontSize: 26),
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: topPadding),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                'Choose your goals',
-                style: AppStyles.questionText().copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                children: _goals.map((goal) => _GoalChip(
-                  label: goal,
-                  isSelected: _selectedGoals.contains(goal),
-                  onTap: () => _toggleGoal(goal),
-                )).toList(),
-              ),
-            ),
-          ],
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Select all that apply',
+            style: AppStyles.questionSubtext(),
+          ),
         ),
-      ),
+        const SizedBox(height: 32),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _goals
+                  .map((goal) => _GoalChip(
+                        label: goal,
+                        isSelected: _selectedGoals.contains(goal),
+                        onTap: () => _toggleGoal(goal),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -110,30 +105,32 @@ class _GoalChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          color: isSelected
+              ? AppColors.textPrimary.withValues(alpha: 0.1)
+              : AppColors.surface,
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
-                : AppColors.accent.withOpacity(0.25),
-            width: isSelected ? 2 : 1,
+                ? AppColors.textPrimary.withValues(alpha: 0.3)
+                : AppColors.border,
+            width: 1,
           ),
-          borderRadius: BorderRadius.circular(20),
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.12)
-              : const Color(0xFF1A1A1A),
         ),
         child: Text(
           label,
           style: AppStyles.mainText().copyWith(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 14,
-            color: isSelected ? AppColors.accent : AppColors.accent.withOpacity(0.85),
+            fontSize: 15,
+            fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+            color:
+                isSelected ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
       ),
     );
   }
 }
-

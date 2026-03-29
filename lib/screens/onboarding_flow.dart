@@ -26,23 +26,22 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   String? _lastFeedback;
   String? _selectedSplit;
 
-  // New order: Goals → Physical Data → Gender (optional) → Nutrition Goal → Split Selection → Voice Demo → Paywall
-  final int _totalSteps = 5; // 0, 1, 2, 3, 4 (voice demo shown separately after)
+  final int _totalSteps = 5;
 
   bool _canProceed() {
     switch (_currentStep) {
-      case 0: // Goals (multi-select)
+      case 0:
         return _onboardingData.goals.isNotEmpty;
-      case 1: // Physical Data
-        return _onboardingData.weight != null && 
-               _onboardingData.height != null &&
-               _onboardingData.weight!.isNotEmpty &&
-               _onboardingData.height!.isNotEmpty;
-      case 2: // Gender (optional)
-        return true; // Always can proceed, gender is optional
-      case 3: // Nutrition Goal
+      case 1:
+        return _onboardingData.weight != null &&
+            _onboardingData.height != null &&
+            _onboardingData.weight!.isNotEmpty &&
+            _onboardingData.height!.isNotEmpty;
+      case 2:
+        return true;
+      case 3:
         return _onboardingData.nutritionGoal != null;
-      case 4: // Split Selection
+      case 4:
         return _selectedSplit != null;
       default:
         return false;
@@ -63,7 +62,6 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _lastFeedback = _getFeedbackForStep(_currentStep);
         _currentStep++;
       });
-      // Clear feedback after showing it
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
           setState(() {
@@ -108,34 +106,29 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _onComplete() async {
-    // Save onboarding data to Hive (including nutrition goals)
     await UserService.updateFromOnboarding(
       gender: _onboardingData.gender,
       weight: _onboardingData.weight,
       height: _onboardingData.height,
       goals: _onboardingData.goals,
     );
-    
-    // Save nutrition goals
+
     await UserService.updateNutritionGoals(
       goal: _onboardingData.nutritionGoal!,
       calories: _onboardingData.targetCalories,
     );
 
-    // Save selected split
     if (_selectedSplit != null) {
       final selectedSplitObj = WorkoutSplit.getAllSplits()
           .firstWhere((s) => s.splitType == _selectedSplit);
       await SplitService.setSplit(selectedSplitObj);
     }
 
-    // Calculate training days from the selected split
     final selectedSplitObj = WorkoutSplit.getAllSplits()
         .firstWhere((s) => s.splitType == _selectedSplit);
     final trainingDays =
         selectedSplitObj.dayNames.where((d) => d != 'Rest').length;
 
-    // Navigate to processing screen → voice demo → paywall
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -168,8 +161,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildCurrentStep() {
     switch (_currentStep) {
-      case 0: // Goals (multi-select)
+      case 0:
         return GoalsMultiStep(
+          key: const ValueKey('goals'),
           selectedGoals: _onboardingData.goals,
           onGoalsSelected: (goals) {
             setState(() {
@@ -177,8 +171,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             });
           },
         );
-      case 1: // Physical Data
+      case 1:
         return PhysicalDataStep(
+          key: const ValueKey('physical'),
           initialWeight: _onboardingData.weight,
           initialHeight: _onboardingData.height,
           onWeightEntered: (weight) {
@@ -192,8 +187,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             });
           },
         );
-      case 2: // Gender (optional)
+      case 2:
         return GenderSelectionStep(
+          key: const ValueKey('gender'),
           selectedGender: _onboardingData.gender,
           onGenderSelected: (gender) {
             setState(() {
@@ -201,8 +197,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             });
           },
         );
-      case 3: // Nutrition Goal
+      case 3:
         return NutritionGoalStep(
+          key: const ValueKey('nutrition'),
           selectedGoal: _onboardingData.nutritionGoal,
           targetCalories: _onboardingData.targetCalories,
           onGoalSelected: (goal, calories) {
@@ -212,8 +209,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             });
           },
         );
-      case 4: // Split Selection
+      case 4:
         return SplitSelectionStep(
+          key: const ValueKey('split'),
           selectedSplit: _selectedSplit,
           onSplitSelected: (split) {
             setState(() {
@@ -230,30 +228,45 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            12,
+            24,
+            MediaQuery.of(context).padding.bottom + 16,
+          ),
           child: Column(
             children: [
+              _buildProgressIndicator(),
+              const SizedBox(height: 4),
               if (_currentStep > 0)
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-                    onPressed: _previousStep,
-                    padding: EdgeInsets.zero,
+                  child: GestureDetector(
+                    onTap: _previousStep,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Icon(
+                        Icons.chevron_left_rounded,
+                        color: AppColors.textSecondary,
+                        size: 28,
+                      ),
+                    ),
                   ),
                 )
               else
-                const SizedBox(height: 48),
+                const SizedBox(height: 44),
               Expanded(
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
                     return FadeTransition(
                       opacity: animation,
                       child: SlideTransition(
                         position: Tween<Offset>(
-                          begin: const Offset(0.1, 0.0),
+                          begin: const Offset(0.04, 0.0),
                           end: Offset.zero,
                         ).animate(CurvedAnimation(
                           parent: animation,
@@ -270,47 +283,25 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 children: [
                   if (_lastFeedback != null)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 14),
                       child: Text(
                         _lastFeedback!,
                         style: AppStyles.questionSubtext().copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )
-                  else if (_currentStep >= 1 && _currentStep < 4) // Show language on later screens
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _currentStep == 3 ? 'Almost ready' : (_currentStep == 2 ? 'Final steps' : 'Almost ready'),
-                        style: AppStyles.questionSubtext().copyWith(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
                         ),
                       ),
                     )
                   else
-                    const SizedBox(height: 12),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _canProceed() ? _nextStep : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.background,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        disabledBackgroundColor: AppColors.accent.withOpacity(0.3),
-                      ),
+                      style: AppStyles.primaryButton(),
                       child: Text(
                         (_currentStep == 2 && _onboardingData.gender == null)
                             ? 'Skip'
-                            : 'Next',
-                        style: AppStyles.mainText().copyWith(
-                          color: AppColors.background,
-                          fontWeight: FontWeight.w600,
-                        ),
+                            : 'Continue',
                       ),
                     ),
                   ),
@@ -322,5 +313,32 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       ),
     );
   }
-}
 
+  Widget _buildProgressIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_totalSteps, (index) {
+          final isActive = index == _currentStep;
+          final isDone = index < _currentStep;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: isActive ? 24 : 6,
+            height: 6,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(3),
+              color: isActive
+                  ? AppColors.textPrimary
+                  : isDone
+                      ? AppColors.textPrimary.withValues(alpha: 0.25)
+                      : AppColors.surfaceLight,
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
