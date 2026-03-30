@@ -65,7 +65,7 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.3),
+                      color: AppColors.accent.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -100,13 +100,13 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? AppColors.primaryLight.withOpacity(0.15)
+                                  ? AppColors.primaryLight.withValues(alpha: 0.15)
                                   : AppColors.cardBackground,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected 
                                     ? AppColors.primaryLight 
-                                    : AppColors.accent.withOpacity(0.2),
+                                    : AppColors.accent.withValues(alpha: 0.2),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -238,7 +238,7 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
           color: AppColors.background,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.accent.withOpacity(0.2),
+            color: AppColors.accent.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -275,8 +275,8 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
               ),
               decoration: BoxDecoration(
                 color: isRest 
-                    ? AppColors.accent.withOpacity(0.1) 
-                    : AppColors.primaryLight.withOpacity(0.12),
+                    ? AppColors.accent.withValues(alpha: 0.1) 
+                    : AppColors.primaryLight.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -286,7 +286,7 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
                   color: isRest 
-                      ? AppColors.accent.withOpacity(0.5) 
+                      ? AppColors.accent.withValues(alpha: 0.5) 
                       : AppColors.primaryLight,
                 ),
               ),
@@ -296,7 +296,7 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
             
             Icon(
               Icons.chevron_right,
-              color: AppColors.accent.withOpacity(0.4),
+              color: AppColors.accent.withValues(alpha: 0.4),
               size: 20,
             ),
           ],

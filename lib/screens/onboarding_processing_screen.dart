@@ -8,6 +8,7 @@ class OnboardingProcessingScreen extends StatefulWidget {
   final int targetCalories;
   final String splitName;
   final int trainingDays;
+  final List<String> dayNames;
   final List<String> goals;
   final VoidCallback onContinue;
 
@@ -17,6 +18,7 @@ class OnboardingProcessingScreen extends StatefulWidget {
     required this.targetCalories,
     required this.splitName,
     required this.trainingDays,
+    required this.dayNames,
     required this.goals,
     required this.onContinue,
   });
@@ -79,7 +81,7 @@ class _OnboardingProcessingScreenState
     if (!mounted) return;
     setState(() => _showPlan = true);
 
-    for (int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 4; i++) {
       await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       setState(() => _visibleCards = i);
@@ -102,18 +104,6 @@ class _OnboardingProcessingScreenState
     }
   }
 
-  IconData get _goalIcon {
-    switch (widget.nutritionGoal) {
-      case 'cut':
-        return Icons.local_fire_department_rounded;
-      case 'bulk':
-        return Icons.fitness_center_rounded;
-      case 'maintain':
-      default:
-        return Icons.balance_rounded;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
@@ -129,7 +119,9 @@ class _OnboardingProcessingScreenState
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 500),
               child: Text(
-                _processingDone ? 'Your plan is ready' : 'Setting things up',
+                _processingDone
+                    ? "Here's your game plan"
+                    : 'Setting things up',
                 key: ValueKey(_processingDone),
                 style: AppStyles.mainText().copyWith(
                   fontSize: 26,
@@ -151,6 +143,26 @@ class _OnboardingProcessingScreenState
                   style: AppStyles.mainText().copyWith(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+            ],
+
+            if (_processingDone) ...[
+              const SizedBox(height: 6),
+              AnimatedOpacity(
+                opacity: _showPlan ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 400),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Text(
+                    'Personalized to your body, your goals, and how you like to train.',
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.35),
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -180,7 +192,7 @@ class _OnboardingProcessingScreenState
                     ),
                     child: Center(
                       child: Text(
-                        'Continue',
+                        "Let's go",
                         style: AppStyles.mainText().copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -298,6 +310,32 @@ class _OnboardingProcessingScreenState
     );
   }
 
+  Map<String, int> get _macros {
+    final cal = widget.targetCalories;
+    switch (widget.nutritionGoal) {
+      case 'cut':
+        return {
+          'protein': (cal * 0.40 / 4).round(),
+          'carbs': (cal * 0.30 / 4).round(),
+          'fats': (cal * 0.30 / 9).round(),
+        };
+      case 'bulk':
+        return {
+          'protein': (cal * 0.30 / 4).round(),
+          'carbs': (cal * 0.45 / 4).round(),
+          'fats': (cal * 0.25 / 9).round(),
+        };
+      default:
+        return {
+          'protein': (cal * 0.30 / 4).round(),
+          'carbs': (cal * 0.40 / 4).round(),
+          'fats': (cal * 0.30 / 9).round(),
+        };
+    }
+  }
+
+  static const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   Widget _buildPlanView() {
     return AnimatedOpacity(
       opacity: _showPlan ? 1.0 : 0.0,
@@ -306,33 +344,235 @@ class _OnboardingProcessingScreenState
         offset: _showPlan ? Offset.zero : const Offset(0, 0.04),
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeOutCubic,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildPlanCard(
+              // --- Section 1: Weekly Schedule ---
+              _animatedSection(
                 index: 0,
-                icon: _goalIcon,
-                title: '${widget.targetCalories} cal/day',
-                subtitle: _goalLabel,
+                child: _buildSection(
+                  label: 'YOUR WEEKLY SPLIT',
+                  child: Column(
+                    children: [
+                      Row(
+                        children: List.generate(7, (i) {
+                          final isRest = widget.dayNames[i] == 'Rest';
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: i == 0 ? 0 : 3,
+                                right: i == 6 ? 0 : 3,
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    _weekdayLabels[i],
+                                    style: AppStyles.mainText().copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white.withValues(
+                                        alpha: isRest ? 0.15 : 0.45,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isRest
+                                          ? Colors.white.withValues(alpha: 0.02)
+                                          : AppColors.primaryLight
+                                              .withValues(alpha: 0.10),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isRest
+                                            ? Colors.white
+                                                .withValues(alpha: 0.04)
+                                            : AppColors.primaryLight
+                                                .withValues(alpha: 0.18),
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        isRest ? '—' : widget.dayNames[i],
+                                        style: AppStyles.mainText().copyWith(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: isRest
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.12)
+                                              : AppColors.primaryLight
+                                                  .withValues(alpha: 0.8),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.splitName,
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          Text(
+                            '${widget.trainingDays} days/week',
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-              _buildPlanCard(
+              const SizedBox(height: 14),
+
+              // --- Section 2: Daily Nutrition ---
+              _animatedSection(
                 index: 1,
-                icon: Icons.calendar_today_rounded,
-                title: widget.splitName,
-                subtitle: '${widget.trainingDays} days per week',
+                child: _buildSection(
+                  label: 'DAILY NUTRITION',
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '${widget.targetCalories}',
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'cal/day',
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.primaryLight.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _goalLabel,
+                              style: AppStyles.mainText().copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    AppColors.primaryLight.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          _macroCell(
+                              'Protein', '${_macros['protein']}g', 0.40),
+                          const SizedBox(width: 8),
+                          _macroCell('Carbs', '${_macros['carbs']}g', 0.35),
+                          const SizedBox(width: 8),
+                          _macroCell('Fats', '${_macros['fats']}g', 0.30),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-              _buildPlanCard(
+              const SizedBox(height: 14),
+
+              // --- Section 3: Goals ---
+              _animatedSection(
                 index: 2,
-                icon: Icons.flag_rounded,
-                title: widget.goals.length > 2
-                    ? '${widget.goals.take(2).join(', ')} +${widget.goals.length - 2}'
-                    : widget.goals.join(', '),
-                subtitle: 'Your focus areas',
+                child: _buildSection(
+                  label: 'YOUR FOCUS',
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: widget.goals.map((goal) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Text(
+                          goal,
+                          style: AppStyles.mainText().copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               ),
+              const SizedBox(height: 14),
+
+              // --- Section 4: What's included ---
+              _animatedSection(
+                index: 3,
+                child: _buildSection(
+                  label: "WHAT'S INCLUDED",
+                  child: Column(
+                    children: [
+                      _includedRow(Icons.mic_none_rounded,
+                          'Voice logging — say your sets, we track them'),
+                      const SizedBox(height: 10),
+                      _includedRow(Icons.auto_awesome,
+                          'AI coach that adapts to your progress'),
+                      const SizedBox(height: 10),
+                      _includedRow(Icons.insights_rounded,
+                          'Strength analytics and PR tracking'),
+                      const SizedBox(height: 10),
+                      _includedRow(Icons.notifications_active_rounded,
+                          'Daily reminders with your workout'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -340,76 +580,103 @@ class _OnboardingProcessingScreenState
     );
   }
 
-  Widget _buildPlanCard({
-    required int index,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
+  Widget _animatedSection({required int index, required Widget child}) {
     final isVisible = _visibleCards > index;
     return AnimatedOpacity(
       opacity: isVisible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 400),
       child: AnimatedSlide(
-        offset: isVisible ? Offset.zero : const Offset(0, 0.2),
+        offset: isVisible ? Offset.zero : const Offset(0, 0.15),
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
-              width: 0.5,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: Colors.white.withValues(alpha: 0.4),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.3),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildSection({required String label, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
         ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+              color: Colors.white.withValues(alpha: 0.2),
+            ),
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _macroCell(String label, String value, double opacity) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: AppStyles.mainText().copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: AppStyles.mainText().copyWith(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.25),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _includedRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: AppColors.primaryLight.withValues(alpha: 0.5),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.45),
+              height: 1.3,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

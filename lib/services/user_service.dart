@@ -41,6 +41,11 @@ class UserService {
     String? weight,
     String? height,
     List<String>? goals,
+    String? preferredWorkoutTime,
+    int? bedtimeHour,
+    int? bedtimeMinute,
+    int? wakeHour,
+    int? wakeMinute,
   }) async {
     final user = getCurrentUser();
     user.updateFromOnboarding(
@@ -50,6 +55,11 @@ class UserService {
       weight: weight,
       height: height,
       goals: goals,
+      preferredWorkoutTime: preferredWorkoutTime,
+      bedtimeHour: bedtimeHour,
+      bedtimeMinute: bedtimeMinute,
+      wakeHour: wakeHour,
+      wakeMinute: wakeMinute,
     );
     await saveUser(user);
   }

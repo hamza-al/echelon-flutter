@@ -70,7 +70,7 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
               Text(
                 'This helps track your daily calorie target',
                 style: AppStyles.questionSubtext().copyWith(
-                  color: AppColors.text.withOpacity(0.6),
+                  color: AppColors.text.withValues(alpha: 0.6),
                 ),
               ),
               
@@ -99,13 +99,13 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary.withOpacity(0.15)
+                            ? AppColors.primary.withValues(alpha: 0.15)
                             : AppColors.cardBackground,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.text.withOpacity(0.1),
+                              : AppColors.text.withValues(alpha: 0.1),
                           width: isSelected ? 2 : 1,
                         ),
                       ),
@@ -128,7 +128,7 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
                             entry.value,
                             style: AppStyles.mainText().copyWith(
                               fontSize: 14,
-                              color: AppColors.text.withOpacity(0.7),
+                              color: AppColors.text.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -155,7 +155,7 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
                     color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppColors.text.withOpacity(0.1),
+                      color: AppColors.text.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Row(
@@ -206,7 +206,7 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
                   onPressed: _selectedGoal != null ? _completeSetup : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withOpacity(0.3),
+                    disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -229,7 +229,7 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
                   'You can change this anytime',
                   style: AppStyles.mainText().copyWith(
                     fontSize: 13,
-                    color: AppColors.text.withOpacity(0.5),
+                    color: AppColors.text.withValues(alpha: 0.5),
                   ),
                 ),
               ),

@@ -6,9 +6,11 @@ import '../models/workout_split.dart';
 import '../services/user_service.dart';
 import '../services/split_service.dart';
 import 'onboarding_processing_screen.dart';
-import 'voice_demo_step.dart';
+import 'feature_demo_screen.dart';
+import 'value_comparison_screen.dart';
 import 'paywall_screen.dart';
 import '../services/review_service.dart';
+import '../services/notification_service.dart';
 
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
@@ -41,7 +43,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   String _typedSoFar = '';
   Timer? _typeTimer;
 
-  static const _totalQuestions = 9;
+  static const _totalQuestions = 11;
 
   final List<String> _goals = [
     'Build muscle',
@@ -84,22 +86,25 @@ class _OnboardingFlowState extends State<OnboardingFlow>
       case 0:
         return "Hey there! What's your name?";
       case 1:
-        final name = _data.name ?? '';
-        return "Nice to meet you, $name. How are you doing?";
-      case 2:
         return "How old are you?";
-      case 3:
+      case 2:
         return "And your biological sex? Totally fine to skip.";
-      case 4:
+      case 3:
         return "How tall are you?";
-      case 5:
+      case 4:
         return "And what do you weigh right now?";
-      case 6:
+      case 5:
         return "What are you working towards? Pick as many as you want.";
-      case 7:
+      case 6:
         return "Are you trying to cut, bulk, or maintain?";
+      case 7:
+        return "How do you like to split your training?";
       case 8:
-        return "Last thing, how do you like to split your training?";
+        return "When do you usually like to workout?";
+      case 9:
+        return "What time do you usually go to bed?";
+      case 10:
+        return "And when do you wake up?";
       default:
         return '';
     }
@@ -108,29 +113,34 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   String _coachReaction(int answeredIndex) {
     switch (answeredIndex) {
       case 0:
-        return '';
+        final name = _data.name ?? '';
+        return "Nice to meet you, $name!";
       case 1:
-        return "Good to hear! Let me get to know you a bit.";
+        return '';
       case 2:
         return '';
       case 3:
         return '';
       case 4:
-        return '';
-      case 5:
         return 'Cool, that helps me dial things in.';
-      case 6:
+      case 5:
         if (_selectedGoals.length > 2) {
           return "Love it. I'll keep all of that in mind.";
         }
         return 'Solid.';
-      case 7:
+      case 6:
         final cals = _calculateCalories(_selectedNutritionGoal ?? 'maintain');
         _data.targetCalories = cals;
         _data.nutritionGoal = _selectedNutritionGoal;
         final goalWord = _selectedNutritionGoal ?? 'maintain';
         return 'To $goalWord at your build, you need around $cals calories a day.';
+      case 7:
+        return 'Great choice.';
       case 8:
+        return 'Got it.';
+      case 9:
+        return '';
+      case 10:
         return "You're all set. Let me put this together.";
       default:
         return '';
@@ -174,8 +184,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   void _focusInputIfNeeded() {
     if (_questionIndex == 0 ||
         _questionIndex == 1 ||
-        _questionIndex == 2 ||
-        _questionIndex == 5) {
+        _questionIndex == 4) {
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _textFocus.requestFocus();
       });
@@ -351,6 +360,11 @@ class _OnboardingFlowState extends State<OnboardingFlow>
       weight: _data.weight,
       height: _data.height,
       goals: _data.goals,
+      preferredWorkoutTime: _data.preferredWorkoutTime,
+      bedtimeHour: _data.bedtimeHour,
+      bedtimeMinute: _data.bedtimeMinute,
+      wakeHour: _data.wakeHour,
+      wakeMinute: _data.wakeMinute,
     );
 
     if (_data.nutritionGoal != null) {
@@ -375,6 +389,16 @@ class _OnboardingFlowState extends State<OnboardingFlow>
 
     ReviewService.promptAfterOnboarding();
 
+    if (_data.preferredWorkoutTime != null) {
+      await NotificationService.requestPermission();
+      await NotificationService.scheduleDailyWorkoutReminder();
+    }
+
+    if (_data.wakeHour != null) {
+      await NotificationService.requestPermission();
+      await NotificationService.scheduleSleepLogReminder();
+    }
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -383,15 +407,25 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             targetCalories: _data.targetCalories,
             splitName: _selectedSplit ?? 'Push/Pull/Legs',
             trainingDays: trainingDays,
+            dayNames: splitObj.dayNames,
             goals: _data.goals,
             onContinue: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => VoiceDemoStep(
+                  builder: (context) => FeatureDemoScreen(
                     onComplete: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) => const PaywallScreen(),
+                          builder: (context) => ValueComparisonScreen(
+                            onContinue: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PaywallScreen(),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       );
                     },
@@ -454,43 +488,20 @@ class _OnboardingFlowState extends State<OnboardingFlow>
     );
   }
 
-  void _skip() {
-    _typeTimer?.cancel();
-    _onComplete();
-  }
-
   Widget _buildProgressBar() {
     final progress = _questionIndex / _totalQuestions;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-      child: Row(
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 3,
-                backgroundColor: Colors.white.withValues(alpha: 0.06),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Colors.white.withValues(alpha: 0.25),
-                ),
-              ),
-            ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(2),
+        child: LinearProgressIndicator(
+          value: progress,
+          minHeight: 3,
+          backgroundColor: Colors.white.withValues(alpha: 0.06),
+          valueColor: AlwaysStoppedAnimation<Color>(
+            Colors.white.withValues(alpha: 0.25),
           ),
-          const SizedBox(width: 14),
-          GestureDetector(
-            onTap: _skip,
-            child: Text(
-              'Skip',
-              style: AppStyles.mainText().copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: Colors.white.withValues(alpha: 0.25),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -569,16 +580,6 @@ class _OnboardingFlowState extends State<OnboardingFlow>
         );
       case 1:
         return _buildTextField(
-          hint: 'Type here...',
-          inputType: TextInputType.text,
-          onSubmit: (val) {
-            if (val.trim().isEmpty) return;
-            _textCtrl.clear();
-            _submitAnswer(val.trim());
-          },
-        );
-      case 2:
-        return _buildTextField(
           hint: 'Age',
           inputType: TextInputType.number,
           onSubmit: (val) {
@@ -589,11 +590,11 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             _submitAnswer('$age');
           },
         );
-      case 3:
+      case 2:
         return _buildGenderPills();
-      case 4:
+      case 3:
         return _buildHeightPicker();
-      case 5:
+      case 4:
         return _buildTextField(
           hint: 'Weight in lbs',
           inputType: TextInputType.number,
@@ -605,12 +606,18 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             _submitAnswer('$w lbs');
           },
         );
-      case 6:
+      case 5:
         return _buildGoalChips();
-      case 7:
+      case 6:
         return _buildNutritionGoalPicker();
-      case 8:
+      case 7:
         return _buildSplitPicker();
+      case 8:
+        return _buildWorkoutTimePicker();
+      case 9:
+        return _buildSleepTimePicker(isBedtime: true);
+      case 10:
+        return _buildSleepTimePicker(isBedtime: false);
       default:
         return const SizedBox.shrink();
     }
@@ -1035,6 +1042,119 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildWorkoutTimePicker() {
+    final options = {
+      'Early Morning': '5 – 8 AM',
+      'Morning': '8 – 11 AM',
+      'Afternoon': '12 – 3 PM',
+      'Evening': '4 – 7 PM',
+      'Night': '8 – 11 PM',
+    };
+    return Column(
+      children: options.entries.map((entry) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GestureDetector(
+            onTap: () {
+              _data.preferredWorkoutTime = entry.key;
+              _submitAnswer(entry.key);
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    entry.key,
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  Text(
+                    entry.value,
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.25),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSleepTimePicker({required bool isBedtime}) {
+    final times = isBedtime
+        ? [
+            (21, 0, '9:00 PM'),
+            (22, 0, '10:00 PM'),
+            (23, 0, '11:00 PM'),
+            (0, 0, '12:00 AM'),
+            (1, 0, '1:00 AM'),
+          ]
+        : [
+            (5, 0, '5:00 AM'),
+            (6, 0, '6:00 AM'),
+            (7, 0, '7:00 AM'),
+            (8, 0, '8:00 AM'),
+            (9, 0, '9:00 AM'),
+          ];
+
+    return Column(
+      children: times.map((t) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GestureDetector(
+            onTap: () {
+              if (isBedtime) {
+                _data.bedtimeHour = t.$1;
+                _data.bedtimeMinute = t.$2;
+              } else {
+                _data.wakeHour = t.$1;
+                _data.wakeMinute = t.$2;
+              }
+              _submitAnswer(t.$3);
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                t.$3,
+                style: AppStyles.mainText().copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ),

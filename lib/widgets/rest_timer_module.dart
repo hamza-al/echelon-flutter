@@ -6,11 +6,13 @@ import '../styles.dart';
 class RestTimerModule extends StatefulWidget {
   final int durationSeconds;
   final VoidCallback? onComplete;
+  final bool useExternalCountdown;
 
   const RestTimerModule({
     super.key,
     required this.durationSeconds,
     this.onComplete,
+    this.useExternalCountdown = false,
   });
 
   @override
@@ -21,25 +23,34 @@ class _RestTimerModuleState extends State<RestTimerModule>
     with SingleTickerProviderStateMixin {
   late int _remainingSeconds;
   Timer? _timer;
-  late AnimationController _progressController;
+  AnimationController? _progressController;
 
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.durationSeconds;
 
-    _progressController = AnimationController(
-      duration: Duration(seconds: widget.durationSeconds),
-      vsync: this,
-    )..forward();
+    if (!widget.useExternalCountdown) {
+      _progressController = AnimationController(
+        duration: Duration(seconds: widget.durationSeconds),
+        vsync: this,
+      )..forward();
+      _startTimer();
+    }
+  }
 
-    _startTimer();
+  @override
+  void didUpdateWidget(RestTimerModule old) {
+    super.didUpdateWidget(old);
+    if (widget.useExternalCountdown) {
+      _remainingSeconds = widget.durationSeconds;
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _progressController.dispose();
+    _progressController?.dispose();
     super.dispose();
   }
 
@@ -72,7 +83,10 @@ class _RestTimerModuleState extends State<RestTimerModule>
 
   @override
   Widget build(BuildContext context) {
-    final isAlmostDone = _remainingSeconds <= 5 && _remainingSeconds > 0;
+    final remaining = widget.useExternalCountdown
+        ? widget.durationSeconds
+        : _remainingSeconds;
+    final isAlmostDone = remaining <= 5 && remaining > 0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -91,30 +105,46 @@ class _RestTimerModuleState extends State<RestTimerModule>
         SizedBox(
           width: 100,
           height: 100,
-          child: AnimatedBuilder2(
-            listenable: _progressController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _RingPainter(
-                  progress: _progressController.value,
-                  isAlmostDone: isAlmostDone,
+          child: widget.useExternalCountdown
+              ? CustomPaint(
+                  painter: _RingPainter(progress: 0, isAlmostDone: isAlmostDone),
+                  child: Center(
+                    child: Text(
+                      _formatTime(remaining),
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: isAlmostDone
+                            ? const Color(0xFFFF6B6B)
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                )
+              : AnimatedBuilder2(
+                  listenable: _progressController!,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _RingPainter(
+                        progress: _progressController!.value,
+                        isAlmostDone: isAlmostDone,
+                      ),
+                      child: child,
+                    );
+                  },
+                  child: Center(
+                    child: Text(
+                      _formatTime(remaining),
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: isAlmostDone
+                            ? const Color(0xFFFF6B6B)
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ),
-                child: child,
-              );
-            },
-            child: Center(
-              child: Text(
-                _formatTime(_remainingSeconds),
-                style: AppStyles.mainText().copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: isAlmostDone
-                      ? const Color(0xFFFF6B6B)
-                      : AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ),
         ),
 
         const SizedBox(height: 14),

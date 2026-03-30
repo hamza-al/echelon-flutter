@@ -20,11 +20,19 @@ class ClassEntry extends HiveObject {
   @HiveField(4)
   String? notes;
 
+  @HiveField(5)
+  int? intensity;
+
+  @HiveField(6)
+  int? caloriesBurned;
+
   ClassEntry({
     String? id,
     required this.className,
     this.durationMinutes,
     this.notes,
+    this.intensity,
+    this.caloriesBurned,
     DateTime? timestamp,
   })  : id = id ?? const Uuid().v4(),
         timestamp = timestamp ?? DateTime.now();

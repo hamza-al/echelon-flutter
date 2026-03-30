@@ -15,6 +15,7 @@ class LogClassScreen extends StatefulWidget {
 class _LogClassScreenState extends State<LogClassScreen> {
   String? _selectedClass;
   int? _selectedDuration;
+  int? _selectedIntensity;
   final _customNameController = TextEditingController();
   final _notesController = TextEditingController();
   final _notesFocus = FocusNode();
@@ -35,14 +36,46 @@ class _LogClassScreenState extends State<LogClassScreen> {
     _ClassOption('Other', Icons.add),
   ];
 
-  static const List<int> _durationPresets = [30, 45, 60, 75, 90];
+  static const List<int> _durationPresets = [15, 30, 45, 60, 75, 90, 120];
+
+  static const List<String> _intensityLabels = [
+    'Light',
+    'Moderate',
+    'Hard',
+    'Intense',
+    'Max',
+  ];
+
+  static const Map<String, double> _calPerMin = {
+    'Pilates': 5,
+    'Orange Theory': 9,
+    'Yoga': 4,
+    'Spin': 9,
+    'Boxing': 9,
+    'HIIT': 10,
+    'Swimming': 8,
+    'CrossFit': 10,
+    'Dance': 7,
+    'Martial Arts': 9,
+    'Running': 9,
+    'Other': 7,
+  };
+
+  static const List<double> _intensityMultipliers = [
+    0.8,
+    1.0,
+    1.2,
+    1.35,
+    1.5,
+  ];
 
   @override
   void initState() {
     super.initState();
     if (widget.existingEntry != null) {
       final entry = widget.existingEntry!;
-      final isPreset = _classOptions.any((o) => o.name == entry.className && o.name != 'Other');
+      final isPreset =
+          _classOptions.any((o) => o.name == entry.className && o.name != 'Other');
       if (isPreset) {
         _selectedClass = entry.className;
       } else {
@@ -51,6 +84,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
         _customNameController.text = entry.className;
       }
       _selectedDuration = entry.durationMinutes;
+      _selectedIntensity = entry.intensity;
       if (entry.notes != null) {
         _notesController.text = entry.notes!;
       }
@@ -74,15 +108,29 @@ class _LogClassScreenState extends State<LogClassScreen> {
 
   bool get _canSave {
     if (_selectedClass == null) return false;
-    if (_selectedClass == 'Other' && _customNameController.text.trim().isEmpty) return false;
+    if (_selectedClass == 'Other' && _customNameController.text.trim().isEmpty) {
+      return false;
+    }
     return true;
+  }
+
+  int? get _estimatedCalories {
+    if (_selectedClass == null || _selectedDuration == null || _selectedIntensity == null) {
+      return null;
+    }
+    final baseName = _selectedClass == 'Other' ? 'Other' : _selectedClass!;
+    final rate = _calPerMin[baseName] ?? 7;
+    final multiplier = _intensityMultipliers[_selectedIntensity! - 1];
+    return (rate * _selectedDuration! * multiplier).round();
   }
 
   Future<void> _save() async {
     if (!_canSave) return;
 
     final className = _resolvedClassName;
-    final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+    final notes =
+        _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+    final cals = _estimatedCalories;
 
     if (widget.existingEntry != null) {
       final updated = ClassEntry(
@@ -90,6 +138,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
         className: className,
         durationMinutes: _selectedDuration,
         notes: notes,
+        intensity: _selectedIntensity,
+        caloriesBurned: cals,
         timestamp: widget.existingEntry!.timestamp,
       );
       await ClassService.updateClass(updated);
@@ -98,6 +148,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
         className: className,
         durationMinutes: _selectedDuration,
         notes: notes,
+        intensity: _selectedIntensity,
+        caloriesBurned: cals,
       );
       await ClassService.logClass(entry);
     }
@@ -110,7 +162,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
             isEdit ? 'Class updated' : '$className logged',
             style: AppStyles.mainText().copyWith(fontSize: 14),
           ),
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: const Color(0xFF1C1C1E),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 2),
@@ -131,286 +183,380 @@ class _LogClassScreenState extends State<LogClassScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(8, 12, 20, 0),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: AppColors.accent,
-                        size: 28,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.arrow_back_ios_rounded,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          size: 20,
+                        ),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isEditing ? 'Edit Class' : 'Log a Class',
-                            style: AppStyles.mainHeader().copyWith(
-                              fontSize: 28,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            isEditing ? 'Update your activity' : 'Track your activity',
-                            style: AppStyles.questionSubtext().copyWith(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 4),
+                    Text(
+                      isEditing ? 'Edit Class' : 'Log a Class',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Class type label
-                      Text(
-                        'What did you do?',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      _sectionLabel('What did you do?'),
+                      const SizedBox(height: 12),
+                      _buildClassGrid(),
 
-                      const SizedBox(height: 16),
-
-                      // Class type grid
-                      GridView.count(
-                        crossAxisCount: 3,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 1.2,
-                        children: _classOptions.map((option) {
-                          final isSelected = _selectedClass == option.name;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedClass = option.name;
-                                _showCustomField = option.name == 'Other';
-                              });
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.primaryLight.withOpacity(0.15)
-                                    : AppColors.cardBackground,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primaryLight
-                                      : Colors.white.withOpacity(0.1),
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    option.icon,
-                                    size: 24,
-                                    color: isSelected
-                                        ? AppColors.primaryLight
-                                        : AppColors.accent.withOpacity(0.6),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    option.name,
-                                    style: AppStyles.mainText().copyWith(
-                                      fontSize: 12,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: isSelected
-                                          ? AppColors.primaryLight
-                                          : AppColors.accent.withOpacity(0.8),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-
-                      // Custom name field
                       if (_showCustomField) ...[
-                        const SizedBox(height: 16),
-                        TextField(
+                        const SizedBox(height: 14),
+                        _buildGlassField(
                           controller: _customNameController,
-                          style: AppStyles.mainText().copyWith(fontSize: 16),
-                          decoration: InputDecoration(
-                            hintText: 'Class name',
-                            hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                            filled: true,
-                            fillColor: AppColors.primary.withOpacity(0.05),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          textCapitalization: TextCapitalization.words,
+                          hint: 'Class name',
+                          capitalization: TextCapitalization.words,
                           onChanged: (_) => setState(() {}),
                         ),
                       ],
 
-                      const SizedBox(height: 32),
-
-                      // Duration
-                      Text(
-                        'Duration (Optional)',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
+                      const SizedBox(height: 28),
+                      _sectionLabel('Duration'),
                       const SizedBox(height: 12),
+                      _buildDurationRow(),
 
-                      Row(
-                        children: _durationPresets.map((mins) {
-                          final isSelected = _selectedDuration == mins;
-                          return Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                right: mins == _durationPresets.last ? 0 : 8,
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedDuration =
-                                        _selectedDuration == mins ? null : mins;
-                                  });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? AppColors.primaryLight.withOpacity(0.15)
-                                        : AppColors.cardBackground,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.primaryLight
-                                          : Colors.white.withOpacity(0.1),
-                                      width: isSelected ? 2 : 1,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '${mins}m',
-                                      style: AppStyles.mainText().copyWith(
-                                        fontSize: 14,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                        color: isSelected
-                                            ? AppColors.primaryLight
-                                            : AppColors.accent.withOpacity(0.7),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Notes
-                      Text(
-                        'Notes (Optional)',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
+                      const SizedBox(height: 28),
+                      _sectionLabel('Intensity'),
                       const SizedBox(height: 12),
+                      _buildIntensityRow(),
 
-                      TextField(
+                      if (_estimatedCalories != null) ...[
+                        const SizedBox(height: 16),
+                        _buildCalorieReadout(),
+                      ],
+
+                      const SizedBox(height: 28),
+                      _sectionLabel('Notes'),
+                      const SizedBox(height: 12),
+                      _buildGlassField(
                         controller: _notesController,
                         focusNode: _notesFocus,
-                        style: AppStyles.mainText().copyWith(fontSize: 16),
+                        hint: 'How was the class?',
                         maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'How was the class?',
-                          hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                          filled: true,
-                          fillColor: AppColors.primary.withOpacity(0.05),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                        ),
-                        textCapitalization: TextCapitalization.sentences,
+                        capitalization: TextCapitalization.sentences,
                       ),
 
                       const SizedBox(height: 32),
-
-                      // Save button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _canSave ? _save : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryLight,
-                            disabledBackgroundColor:
-                                AppColors.primaryLight.withOpacity(0.3),
-                            foregroundColor: AppColors.background,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            isEditing ? 'Update Class' : 'Log Class',
-                            style: AppStyles.mainText().copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: _canSave
-                                  ? AppColors.background
-                                  : AppColors.background.withOpacity(0.5),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
+                      _buildSaveButton(isEditing),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: AppStyles.mainText().copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Colors.white.withValues(alpha: 0.4),
+      ),
+    );
+  }
+
+  Widget _buildClassGrid() {
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 1.25,
+      children: _classOptions.map((option) {
+        final isSelected = _selectedClass == option.name;
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedClass = option.name;
+              _showCustomField = option.name == 'Other';
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.20)
+                    : Colors.white.withValues(alpha: 0.06),
+                width: 0.5,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  option.icon,
+                  size: 22,
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.35),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  option.name,
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : Colors.white.withValues(alpha: 0.4),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDurationRow() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _durationPresets.map((mins) {
+        final isSelected = _selectedDuration == mins;
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDuration = _selectedDuration == mins ? null : mins;
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.22)
+                    : Colors.white.withValues(alpha: 0.06),
+                width: 0.5,
+              ),
+            ),
+            child: Text(
+              '${mins}m',
+              style: AppStyles.mainText().copyWith(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.85)
+                    : Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildIntensityRow() {
+    return Row(
+      children: List.generate(_intensityLabels.length, (i) {
+        final level = i + 1;
+        final isSelected = _selectedIntensity == level;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: i < _intensityLabels.length - 1 ? 8 : 0),
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedIntensity = _selectedIntensity == level ? null : level;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : Colors.white.withValues(alpha: 0.06),
+                    width: 0.5,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    _intensityLabels[i],
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.85)
+                          : Colors.white.withValues(alpha: 0.4),
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildCalorieReadout() {
+    return AnimatedOpacity(
+      opacity: 1.0,
+      duration: const Duration(milliseconds: 300),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.04),
+            width: 0.5,
+          ),
+        ),
+        child: Center(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '~${_estimatedCalories}',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+                TextSpan(
+                  text: ' cal',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassField({
+    required TextEditingController controller,
+    required String hint,
+    FocusNode? focusNode,
+    int maxLines = 1,
+    TextCapitalization capitalization = TextCapitalization.none,
+    ValueChanged<String>? onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      maxLines: maxLines,
+      textCapitalization: capitalization,
+      style: AppStyles.mainText().copyWith(fontSize: 15),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppStyles.mainText().copyWith(
+          fontSize: 15,
+          color: Colors.white.withValues(alpha: 0.15),
+        ),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.04),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton(bool isEditing) {
+    return GestureDetector(
+      onTap: _canSave ? _save : null,
+      child: AnimatedOpacity(
+        opacity: _canSave ? 1.0 : 0.35,
+        duration: const Duration(milliseconds: 200),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+              width: 0.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              isEditing ? 'Update Class' : 'Log Class',
+              style: AppStyles.mainText().copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
+            ),
           ),
         ),
       ),

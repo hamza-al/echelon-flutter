@@ -32,13 +32,18 @@ class UserAdapter extends TypeAdapter<User> {
       customFats: (fields[12] as num?)?.toDouble(),
       name: fields[13] as String?,
       age: (fields[14] as num?)?.toInt(),
+      preferredWorkoutTime: fields[15] as String?,
+      bedtimeHour: (fields[16] as num?)?.toInt(),
+      bedtimeMinute: (fields[17] as num?)?.toInt(),
+      wakeHour: (fields[18] as num?)?.toInt(),
+      wakeMinute: (fields[19] as num?)?.toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(15)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.gender)
       ..writeByte(1)
@@ -68,7 +73,17 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(13)
       ..write(obj.name)
       ..writeByte(14)
-      ..write(obj.age);
+      ..write(obj.age)
+      ..writeByte(15)
+      ..write(obj.preferredWorkoutTime)
+      ..writeByte(16)
+      ..write(obj.bedtimeHour)
+      ..writeByte(17)
+      ..write(obj.bedtimeMinute)
+      ..writeByte(18)
+      ..write(obj.wakeHour)
+      ..writeByte(19)
+      ..write(obj.wakeMinute);
   }
 
   @override

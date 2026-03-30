@@ -916,6 +916,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       _formatDate(entry.timestamp),
                       if (entry.durationMinutes != null)
                         entry.durationFormatted,
+                      if (entry.intensity != null)
+                        const ['', 'Light', 'Moderate', 'Hard', 'Intense', 'Max'][entry.intensity!],
+                      if (entry.caloriesBurned != null)
+                        '~${entry.caloriesBurned} cal',
                     ].join(' · '),
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,

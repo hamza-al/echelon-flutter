@@ -59,16 +59,16 @@ class _WeightInputStepState extends State<WeightInputStep> {
                   hintText: '0',
                   hintStyle: AppStyles.mainText().copyWith(
                     fontSize: 32,
-                    color: AppColors.accent.withOpacity(0.3),
+                    color: AppColors.accent.withValues(alpha: 0.3),
                   ),
                   border: UnderlineInputBorder(
                     borderSide: BorderSide(
-                      color: AppColors.accent.withOpacity(0.3),
+                      color: AppColors.accent.withValues(alpha: 0.3),
                     ),
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                      color: AppColors.accent.withOpacity(0.3),
+                      color: AppColors.accent.withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: UnderlineInputBorder(
@@ -99,7 +99,7 @@ class _WeightInputStepState extends State<WeightInputStep> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3),
+                    color: AppColors.accent.withValues(alpha: 0.3),
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),

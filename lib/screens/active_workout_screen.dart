@@ -11,6 +11,7 @@ import '../widgets/pulsing_particle_sphere.dart';
 import '../widgets/rest_timer_module.dart';
 import '../services/workout_service.dart';
 import '../services/auth_service.dart';
+import '../services/split_service.dart';
 import '../models/workout.dart';
 import '../stores/active_workout_store.dart';
 import '../components/workout_results_display.dart';
@@ -57,9 +58,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   bool _showResults = false;
   List<Map<String, dynamic>> _lastLoggedSets = [];
   
-  // For rest timer
-  bool _showRestTimer = false;
-  int _restTimerDuration = 0;
+  // Rest timer now uses ActiveWorkoutStore
   
   // Animation controller for results fade
   AnimationController? _fadeController;
@@ -115,7 +114,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       if (mounted) {
         final workoutStore = context.read<ActiveWorkoutStore>();
         if (!workoutStore.hasActiveWorkout) {
-          workoutStore.startWorkout(activeWorkout.id);
+          workoutStore.startWorkout(activeWorkout.id,
+              label: SplitService.getTodaysWorkout());
         }
       }
       
@@ -128,7 +128,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     if (mounted && _currentWorkout == null) {
       final workoutStore = context.read<ActiveWorkoutStore>();
       if (!workoutStore.hasActiveWorkout) {
-        workoutStore.startWorkout('pending');
+        workoutStore.startWorkout('pending',
+            label: SplitService.getTodaysWorkout());
       }
     }
     
@@ -386,17 +387,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     // Skip if no commands
     if (commands.isEmpty) return;
     
-    // Check for timer commands first
     for (var command in commands) {
       if (command['type'] == 'start_timer') {
         final payload = command['payload'];
         final durationSeconds = payload['duration_seconds'] as int;
-        
-        setState(() {
-          _showRestTimer = true;
-          _restTimerDuration = durationSeconds;
-        });
-        
+        if (mounted) {
+          context.read<ActiveWorkoutStore>().startRest(durationSeconds);
+        }
       }
     }
     
@@ -406,11 +403,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         notes: 'Voice-logged workout',
       );
       
-      // Initialize store with workout ID ONLY if not already started
       if (mounted) {
         final workoutStore = context.read<ActiveWorkoutStore>();
         if (!workoutStore.hasActiveWorkout) {
-          workoutStore.startWorkout(_currentWorkout!.id);
+          workoutStore.startWorkout(_currentWorkout!.id,
+              label: SplitService.getTodaysWorkout());
         }
       }
     }
@@ -457,14 +454,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       }
     }
     
-    // Update total sets count and show results
     setState(() {
       _totalSets = _currentWorkout!.totalSets;
       _lastLoggedSets = loggedSets;
       _showResults = true;
     });
+    if (mounted && loggedSets.isNotEmpty) {
+      context.read<ActiveWorkoutStore>().incrementSets(loggedSets.length);
+    }
     
-    // Trigger fade-in animation
     _fadeController?.forward(from: 0.0);
     
     // Auto-hide after 3 seconds
@@ -583,7 +581,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       if (mounted) {
         final workoutStore = context.read<ActiveWorkoutStore>();
         if (!workoutStore.hasActiveWorkout) {
-          workoutStore.startWorkout(_currentWorkout!.id);
+          workoutStore.startWorkout(_currentWorkout!.id,
+              label: SplitService.getTodaysWorkout());
         }
       }
     }
@@ -597,7 +596,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       weight,
     );
     
-    // Update UI
     setState(() {
       _totalSets = _currentWorkout!.totalSets;
       _lastLoggedSets = [{
@@ -608,8 +606,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       }];
       _showResults = true;
     });
+    if (mounted) {
+      context.read<ActiveWorkoutStore>().incrementSets();
+    }
     
-    // Trigger fade-in animation
     _fadeController?.forward(from: 0.0);
     
     // Auto-hide after 3 seconds
@@ -887,20 +887,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           
           const SizedBox(height: 40),
           
-          // Rest timer module
-          if (_showRestTimer)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: RestTimerModule(
-                key: ValueKey(_restTimerDuration),
-                durationSeconds: _restTimerDuration,
-                onComplete: () {
-                  setState(() {
-                    _showRestTimer = false;
-                  });
-                },
-              ),
-            ),
+          Consumer<ActiveWorkoutStore>(
+            builder: (context, store, _) {
+              if (!store.hasActiveRest) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: RestTimerModule(
+                  key: ValueKey(store.restTotal),
+                  durationSeconds: store.restRemaining,
+                  onComplete: store.skipRest,
+                  useExternalCountdown: true,
+                ),
+              );
+            },
+          ),
           
           // Workout results
           if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
@@ -917,7 +917,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
               ),
             ),
           
-          if (!_showRestTimer && !_showResults)
+          if (!context.watch<ActiveWorkoutStore>().hasActiveRest && !_showResults)
             const SizedBox(height: 40),
           
           Text(

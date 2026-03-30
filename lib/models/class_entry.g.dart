@@ -21,6 +21,8 @@ class ClassEntryAdapter extends TypeAdapter<ClassEntry> {
       className: fields[1] as String,
       durationMinutes: (fields[3] as num?)?.toInt(),
       notes: fields[4] as String?,
+      intensity: (fields[5] as num?)?.toInt(),
+      caloriesBurned: (fields[6] as num?)?.toInt(),
       timestamp: fields[2] as DateTime?,
     );
   }
@@ -28,7 +30,7 @@ class ClassEntryAdapter extends TypeAdapter<ClassEntry> {
   @override
   void write(BinaryWriter writer, ClassEntry obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +40,11 @@ class ClassEntryAdapter extends TypeAdapter<ClassEntry> {
       ..writeByte(3)
       ..write(obj.durationMinutes)
       ..writeByte(4)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(5)
+      ..write(obj.intensity)
+      ..writeByte(6)
+      ..write(obj.caloriesBurned);
   }
 
   @override

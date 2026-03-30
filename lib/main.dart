@@ -26,9 +26,12 @@ import 'services/workout_audio_cache.dart';
 import 'services/split_service.dart';
 import 'services/class_service.dart';
 import 'services/review_service.dart';
+import 'services/notification_service.dart';
 import 'stores/active_workout_store.dart';
 import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,6 +57,20 @@ void main() async {
   await ClassService.init();
   await ReviewService.init();
   ReviewService.trackAppOpen();
+  await NotificationService.init();
+  NotificationService.onNotificationTap = (payload) {
+    if (payload == 'sleep_log') {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const MainNavigationScreen(
+            initialTab: 2,
+            openSleepTab: true,
+          ),
+        ),
+        (_) => false,
+      );
+    }
+  };
   
   final nutritionService = NutritionService();
   await nutritionService.initialize();
@@ -110,6 +127,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         title: 'echelon',
         theme: ThemeData(
@@ -138,8 +156,14 @@ class MyApp extends StatelessWidget {
 class AppInitializer extends StatelessWidget {
   const AppInitializer({super.key});
 
+  static const bool kForceOnboarding = false;
+
   @override
   Widget build(BuildContext context) {
+    if (kForceOnboarding) {
+      return const LandingPage();
+    }
+
     final hasPaid = UserService.hasPaidSubscription();
 
     if (hasPaid) {

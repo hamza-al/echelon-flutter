@@ -64,6 +64,8 @@ class ClassService {
       existing.className = updated.className;
       existing.durationMinutes = updated.durationMinutes;
       existing.notes = updated.notes;
+      existing.intensity = updated.intensity;
+      existing.caloriesBurned = updated.caloriesBurned;
       await existing.save();
     }
   }

@@ -7,6 +7,11 @@ class OnboardingData {
   List<String> goals = [];
   String? nutritionGoal;
   int targetCalories = 2000;
+  String? preferredWorkoutTime;
+  int? bedtimeHour;
+  int? bedtimeMinute;
+  int? wakeHour;
+  int? wakeMinute;
 
   OnboardingData({
     this.name,
@@ -17,6 +22,11 @@ class OnboardingData {
     List<String>? goals,
     this.nutritionGoal,
     this.targetCalories = 2000,
+    this.preferredWorkoutTime,
+    this.bedtimeHour,
+    this.bedtimeMinute,
+    this.wakeHour,
+    this.wakeMinute,
   }) : goals = goals ?? [];
 
   bool get isComplete {

@@ -49,6 +49,21 @@ class User extends HiveObject {
   @HiveField(14)
   int? age;
 
+  @HiveField(15)
+  String? preferredWorkoutTime;
+
+  @HiveField(16)
+  int? bedtimeHour;
+
+  @HiveField(17)
+  int? bedtimeMinute;
+
+  @HiveField(18)
+  int? wakeHour;
+
+  @HiveField(19)
+  int? wakeMinute;
+
   User({
     this.gender,
     this.weight,
@@ -65,6 +80,11 @@ class User extends HiveObject {
     this.customFats,
     this.name,
     this.age,
+    this.preferredWorkoutTime,
+    this.bedtimeHour,
+    this.bedtimeMinute,
+    this.wakeHour,
+    this.wakeMinute,
   })  : goals = goals ?? [],
         createdAt = createdAt ?? DateTime.now(),
         lastUpdated = lastUpdated ?? DateTime.now();
@@ -76,6 +96,11 @@ class User extends HiveObject {
     String? weight,
     String? height,
     List<String>? goals,
+    String? preferredWorkoutTime,
+    int? bedtimeHour,
+    int? bedtimeMinute,
+    int? wakeHour,
+    int? wakeMinute,
   }) {
     if (name != null) this.name = name;
     if (age != null) this.age = age;
@@ -83,6 +108,11 @@ class User extends HiveObject {
     if (weight != null) this.weight = weight;
     if (height != null) this.height = height;
     if (goals != null) this.goals = goals;
+    if (preferredWorkoutTime != null) this.preferredWorkoutTime = preferredWorkoutTime;
+    if (bedtimeHour != null) this.bedtimeHour = bedtimeHour;
+    if (bedtimeMinute != null) this.bedtimeMinute = bedtimeMinute;
+    if (wakeHour != null) this.wakeHour = wakeHour;
+    if (wakeMinute != null) this.wakeMinute = wakeMinute;
     lastUpdated = DateTime.now();
   }
 

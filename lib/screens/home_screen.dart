@@ -130,10 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.06),
+                            color: Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.12),
+                              color: Colors.white.withValues(alpha: 0.12),
                               width: 1,
                             ),
                           ),
@@ -143,14 +143,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               Icon(
                                 Icons.event_available,
                                 size: 18,
-                                color: AppColors.accent.withOpacity(0.6),
+                                color: AppColors.accent.withValues(alpha: 0.6),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 'Log a Class',
                                 style: AppStyles.mainText().copyWith(
                                   fontSize: 14,
-                                  color: AppColors.accent.withOpacity(0.6),
+                                  color: AppColors.accent.withValues(alpha: 0.6),
                                 ),
                               ),
                             ],

@@ -298,7 +298,7 @@ class _VoiceDemoStepState extends State<VoiceDemoStep> {
               style: AppStyles.mainText().copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: AppColors.accent.withOpacity(0.6),
+                color: AppColors.accent.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
               maxLines: 3,

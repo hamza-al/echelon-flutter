@@ -3,22 +3,30 @@ import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home_screen.dart';
 import 'progress_screen.dart';
-import 'nutrition_screen.dart';
+import 'health_screen.dart';
 import 'coach_chat_screen.dart';
 import 'timer_screen.dart';
 import '../stores/nutrition_store.dart';
 import '../widgets/pulsing_particle_sphere.dart';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final int initialTab;
+  final bool openSleepTab;
+
+  const MainNavigationScreen({
+    super.key,
+    this.initialTab = 1,
+    this.openSleepTab = false,
+  });
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0;
-  final PageController _pageController = PageController(initialPage: 0);
+  late int _currentIndex = widget.initialTab;
+  late final PageController _pageController =
+      PageController(initialPage: widget.initialTab);
 
   @override
   void initState() {
@@ -52,8 +60,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   static const _iconPaths = [
     'assets/ionicons.designerpack/stats-chart.svg',
     'assets/ionicons.designerpack/chatbubble.svg',
+    'assets/ionicons.designerpack/heart.svg',
     'assets/progress-ring.svg',
-    'assets/ionicons.designerpack/restaurant.svg',
   ];
 
   @override
@@ -66,12 +74,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             controller: _pageController,
             onPageChanged: _onPageChanged,
             physics: const PageScrollPhysics(),
-            children: const [
-              ProgressScreen(),
-              CoachChatScreen(),
-              TimerScreen(),
-              NutritionScreen(),
-              HomeScreen(),
+            children: [
+              const ProgressScreen(),
+              const CoachChatScreen(),
+              HealthScreen(
+                  initialSubTab: widget.openSleepTab ? 1 : 0),
+              const TimerScreen(),
+              const HomeScreen(),
             ],
           ),
 

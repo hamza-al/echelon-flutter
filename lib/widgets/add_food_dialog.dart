@@ -86,12 +86,12 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 40,
               spreadRadius: 0,
               offset: const Offset(0, 20),
@@ -110,7 +110,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -137,7 +137,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                           'Track your nutrition',
                           style: AppStyles.mainText().copyWith(
                             fontSize: 13,
-                            color: AppColors.text.withOpacity(0.5),
+                            color: AppColors.text.withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -154,7 +154,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                 style: AppStyles.mainText().copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text.withOpacity(0.8),
+                  color: AppColors.text.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 8),
@@ -166,7 +166,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                   hintText: 'e.g., 2, 1 cup, 100g...',
                   hintStyle: AppStyles.mainText().copyWith(
                     fontSize: 16,
-                    color: AppColors.text.withOpacity(0.3),
+                    color: AppColors.text.withValues(alpha: 0.3),
                   ),
                   filled: true,
                   fillColor: AppColors.background,
@@ -177,13 +177,13 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: AppColors.text.withOpacity(0.1),
+                      color: AppColors.text.withValues(alpha: 0.1),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: AppColors.text.withOpacity(0.1),
+                      color: AppColors.text.withValues(alpha: 0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -204,7 +204,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                 style: AppStyles.mainText().copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.text.withOpacity(0.8),
+                  color: AppColors.text.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                   hintText: 'e.g., eggs, chicken breast...',
                   hintStyle: AppStyles.mainText().copyWith(
                     fontSize: 16,
-                    color: AppColors.text.withOpacity(0.3),
+                    color: AppColors.text.withValues(alpha: 0.3),
                   ),
                   filled: true,
                   fillColor: AppColors.background,
@@ -228,13 +228,13 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: AppColors.text.withOpacity(0.1),
+                      color: AppColors.text.withValues(alpha: 0.1),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(
-                      color: AppColors.text.withOpacity(0.1),
+                      color: AppColors.text.withValues(alpha: 0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -256,17 +256,17 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.red.withOpacity(0.2),
+                      color: Colors.red.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.error_outline,
-                        color: Colors.red.withOpacity(0.8),
+                        color: Colors.red.withValues(alpha: 0.8),
                         size: 18,
                       ),
                       const SizedBox(width: 10),
@@ -275,7 +275,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                           _errorMessage!,
                           style: AppStyles.mainText().copyWith(
                             fontSize: 13,
-                            color: Colors.red.withOpacity(0.9),
+                            color: Colors.red.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -303,7 +303,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                         style: AppStyles.mainText().copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.text.withOpacity(0.6),
+                          color: AppColors.text.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
@@ -318,7 +318,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                             ? []
                             : [
                                 BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 16,
                                   spreadRadius: 0,
                                   offset: const Offset(0, 6),
@@ -329,7 +329,7 @@ class _AddFoodDialogState extends State<AddFoodDialog> {
                         onPressed: _isLoading ? null : _addFood,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
+                          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           elevation: 0,

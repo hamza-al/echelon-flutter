@@ -9,7 +9,8 @@ import 'add_food_screen.dart';
 import 'dart:math' as math;
 
 class NutritionScreen extends StatelessWidget {
-  const NutritionScreen({super.key});
+  final bool embedded;
+  const NutritionScreen({super.key, this.embedded = false});
 
   void _showEditGoals(BuildContext context, NutritionStore nutritionStore) {
     final macroTargets = MacroCalculator.calculateTargets();
@@ -227,10 +228,7 @@ class NutritionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Consumer<NutritionStore>(
+    final body = Consumer<NutritionStore>(
           builder: (context, nutritionStore, _) {
             if (!nutritionStore.hasSetGoals) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -564,8 +562,13 @@ class NutritionScreen extends StatelessWidget {
               ],
             );
           },
-        ),
-      ),
+        );
+
+    if (embedded) return body;
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(child: body),
     );
   }
 }

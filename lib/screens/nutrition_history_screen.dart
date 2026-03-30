@@ -92,7 +92,7 @@ class _NutritionHistoryScreenState extends State<NutritionHistoryScreen> {
                           child: Text(
                             'No history yet',
                             style: AppStyles.mainText().copyWith(
-                              color: AppColors.text.withOpacity(0.5),
+                              color: AppColors.text.withValues(alpha: 0.5),
                             ),
                           ),
                         )
@@ -145,10 +145,10 @@ class _HistoryDayCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               width: 1,
             ),
           ),
@@ -170,7 +170,7 @@ class _HistoryDayCard extends StatelessWidget {
                     '${nutrition.totalCalories} / ${nutrition.calorieGoal} cal',
                     style: AppStyles.mainText().copyWith(
                       fontSize: 14,
-                      color: AppColors.text.withOpacity(0.6),
+                      color: AppColors.text.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -210,7 +210,7 @@ class _HistoryDayCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (nutrition.totalCalories / nutrition.calorieGoal).clamp(0.0, 1.0),
-                  backgroundColor: Colors.white.withOpacity(0.05),
+                  backgroundColor: Colors.white.withValues(alpha: 0.05),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     nutrition.isOverGoal ? Colors.red : AppColors.primary,
                   ),
@@ -230,14 +230,14 @@ class _HistoryDayCard extends StatelessWidget {
                         entry.name,
                         style: AppStyles.mainText().copyWith(
                           fontSize: 13,
-                          color: AppColors.text.withOpacity(0.7),
+                          color: AppColors.text.withValues(alpha: 0.7),
                         ),
                       ),
                       Text(
                         '${entry.calories} cal',
                         style: AppStyles.mainText().copyWith(
                           fontSize: 13,
-                          color: AppColors.text.withOpacity(0.5),
+                          color: AppColors.text.withValues(alpha: 0.5),
                         ),
                       ),
                     ],
@@ -270,7 +270,7 @@ class _MacroChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
