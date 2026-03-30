@@ -34,8 +34,9 @@ class UserService {
     await _userBox!.put(_userKey, user);
   }
 
-  // Update user from onboarding
   static Future<void> updateFromOnboarding({
+    String? name,
+    int? age,
     String? gender,
     String? weight,
     String? height,
@@ -43,6 +44,8 @@ class UserService {
   }) async {
     final user = getCurrentUser();
     user.updateFromOnboarding(
+      name: name,
+      age: age,
       gender: gender,
       weight: weight,
       height: height,

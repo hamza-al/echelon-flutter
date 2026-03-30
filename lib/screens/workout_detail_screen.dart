@@ -6,10 +6,7 @@ import '../models/exercise.dart';
 class WorkoutDetailScreen extends StatelessWidget {
   final Workout workout;
 
-  const WorkoutDetailScreen({
-    super.key,
-    required this.workout,
-  });
+  const WorkoutDetailScreen({super.key, required this.workout});
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +14,20 @@ class WorkoutDetailScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 24, 0),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: AppColors.accent,
-                      size: 28,
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.arrow_back_ios_rounded,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -37,15 +36,14 @@ class WorkoutDetailScreen extends StatelessWidget {
                       children: [
                         Text(
                           _formatDate(workout.startTime),
-                          style: AppStyles.mainHeader().copyWith(
-                            fontSize: 24,
-                          ),
+                          style: AppStyles.mainHeader().copyWith(fontSize: 24),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           workout.formattedDuration,
-                          style: AppStyles.questionSubtext().copyWith(
+                          style: AppStyles.mainText().copyWith(
                             fontSize: 14,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -54,49 +52,41 @@ class WorkoutDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Stats Summary
+            const SizedBox(height: 20),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard(
+                    child: _statCard(
                       workout.exercises.length.toString(),
                       'Exercises',
-                      Icons.fitness_center,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: _buildStatCard(
+                    child: _statCard(
                       workout.totalSets.toString(),
                       'Sets',
-                      Icons.repeat,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: _buildStatCard(
+                    child: _statCard(
                       workout.totalReps.toString(),
                       'Reps',
-                      Icons.trending_up,
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Exercises List
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
                 itemCount: workout.exercises.length,
                 itemBuilder: (context, index) {
-                  final exercise = workout.exercises[index];
-                  return _buildExerciseCard(exercise);
+                  return _buildExerciseCard(workout.exercises[index]);
                 },
               ),
             ),
@@ -106,30 +96,24 @@ class WorkoutDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String value, String label, IconData icon) {
+  Widget _statCard(String value, String label) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
-          width: 1,
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
         ),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: AppColors.primaryLight,
-            size: 20,
-          ),
-          const SizedBox(height: 8),
           Text(
             value,
             style: AppStyles.secondaryHeader().copyWith(
-              fontSize: 24,
-              color: AppColors.accent,
+              fontSize: 22,
+              height: 1.0,
             ),
           ),
           const SizedBox(height: 2),
@@ -137,7 +121,7 @@ class WorkoutDetailScreen extends StatelessWidget {
             label,
             style: AppStyles.mainText().copyWith(
               fontSize: 11,
-              color: AppColors.accent.withOpacity(0.6),
+              color: AppColors.textMuted,
             ),
           ),
         ],
@@ -147,35 +131,36 @@ class WorkoutDetailScreen extends StatelessWidget {
 
   Widget _buildExerciseCard(Exercise exercise) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.15),
-          width: 1,
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Exercise name
           Row(
             children: [
-              Text(
-                _formatExerciseName(exercise.name),
-                style: AppStyles.mainText().copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  _formatExerciseName(exercise.name),
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
               if (exercise.isDurationBased)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -183,70 +168,69 @@ class WorkoutDetailScreen extends StatelessWidget {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryLight,
+                      color: Colors.white.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
             ],
           ),
-          
           const SizedBox(height: 12),
-          
-          // Sets list
           ...exercise.sets.asMap().entries.map((entry) {
             final setIndex = entry.key;
             final set = entry.value;
             final isLast = setIndex == exercise.sets.length - 1;
-            
+
             return Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
               child: Row(
                 children: [
-                  // Set number
                   Container(
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(7),
                     ),
                     child: Center(
                       child: Text(
                         '${set.setNumber}',
                         style: AppStyles.mainText().copyWith(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primaryLight,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
                   ),
-                  
                   const SizedBox(width: 12),
-                  
-                  // Set details (duration-based or weight-based)
                   Expanded(
                     child: exercise.isDurationBased
-                        ? _buildDurationSetDetails(set)
-                        : _buildWeightSetDetails(set),
+                        ? Text(
+                            set.durationDisplay,
+                            style: AppStyles.mainText().copyWith(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          )
+                        : _buildWeightSetRow(set),
                   ),
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildWeightSetDetails(set) {
+  Widget _buildWeightSetRow(dynamic set) {
     return Row(
       children: [
         Text(
           '${set.reps} reps',
           style: AppStyles.mainText().copyWith(
             fontSize: 14,
-            color: AppColors.accent.withOpacity(0.9),
+            color: AppColors.textSecondary,
           ),
         ),
         if (set.weight != null && set.weight! > 0) ...[
@@ -254,7 +238,7 @@ class WorkoutDetailScreen extends StatelessWidget {
             ' @ ',
             style: AppStyles.mainText().copyWith(
               fontSize: 14,
-              color: AppColors.accent.withOpacity(0.5),
+              color: AppColors.textMuted,
             ),
           ),
           Text(
@@ -262,7 +246,6 @@ class WorkoutDetailScreen extends StatelessWidget {
             style: AppStyles.mainText().copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.accent,
             ),
           ),
         ],
@@ -271,7 +254,7 @@ class WorkoutDetailScreen extends StatelessWidget {
             ' (bodyweight)',
             style: AppStyles.mainText().copyWith(
               fontSize: 13,
-              color: AppColors.accent.withOpacity(0.6),
+              color: AppColors.textMuted,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -279,40 +262,24 @@ class WorkoutDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDurationSetDetails(set) {
-    return Text(
-      set.durationDisplay,
-      style: AppStyles.mainText().copyWith(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.accent,
-      ),
-    );
-  }
-
   String _formatExerciseName(String name) {
-    // Convert snake_case to Title Case
     return name
         .split('_')
-        .map((word) => word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1))
+        .map((w) => w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1))
         .join(' ');
   }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final workoutDate = DateTime(date.year, date.month, date.day);
-    final difference = today.difference(workoutDate).inDays;
-
-    if (difference == 0) {
-      return 'Today\'s Workout';
-    } else if (difference == 1) {
-      return 'Yesterday\'s Workout';
-    } else if (difference < 7) {
-      return 'Workout - $difference days ago';
-    } else {
-      return 'Workout - ${date.month}/${date.day}/${date.year}';
-    }
+    final d = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(d).inDays;
+    if (diff == 0) return 'Today\'s Workout';
+    if (diff == 1) return 'Yesterday';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${months[date.month - 1]} ${date.day}';
   }
 }
-

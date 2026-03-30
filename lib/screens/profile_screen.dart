@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../styles.dart';
 import '../services/user_service.dart';
 
@@ -28,16 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Load immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserData();
     });
   }
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reload whenever screen is shown
     _loadUserData();
   }
 
@@ -47,10 +44,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _selectedGender = user.gender;
         _selectedGoals = List.from(user.goals);
-        _weightLbs = user.weight != null ? int.tryParse(user.weight!) : null;
-        _heightInches = user.height != null ? int.tryParse(user.height!) : null;
+        _weightLbs = _parseWeight(user.weight);
+        _heightInches = _parseHeight(user.height);
       });
     }
+  }
+
+  int? _parseWeight(String? raw) {
+    if (raw == null) return null;
+    // Handle both "170 lbs" (onboarding) and "170" (profile save)
+    final match = RegExp(r'(\d+)').firstMatch(raw);
+    return match != null ? int.tryParse(match.group(1)!) : null;
+  }
+
+  int? _parseHeight(String? raw) {
+    if (raw == null) return null;
+    // Handle "5'8" (onboarding format)
+    if (raw.contains("'")) {
+      final parts = raw.split("'");
+      if (parts.length == 2) {
+        final feet = int.tryParse(parts[0].trim()) ?? 0;
+        final inches = int.tryParse(parts[1].replaceAll('"', '').trim()) ?? 0;
+        return feet * 12 + inches;
+      }
+    }
+    // Handle plain total-inches string like "68" (profile save format)
+    return int.tryParse(raw);
   }
 
   @override
@@ -61,8 +80,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     final user = UserService.getCurrentUser();
     user.gender = _selectedGender;
-    user.weight = _weightLbs?.toString();
-    user.height = _heightInches?.toString();
+    user.weight = _weightLbs != null ? '$_weightLbs lbs' : null;
+    user.height = _heightInches != null
+        ? "${_heightInches! ~/ 12}'${_heightInches! % 12}\""
+        : null;
     user.goals = _selectedGoals;
 
     await UserService.saveUser(user);
@@ -71,14 +92,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Profile updated!',
-            style: AppStyles.mainText(),
+            'Profile updated',
+            style: AppStyles.mainText().copyWith(fontSize: 13),
           ),
-          backgroundColor: AppColors.primary,
+          backgroundColor: const Color(0xFF1A1A1A),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
       Navigator.of(context).pop();
@@ -88,21 +108,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showWeightPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         int selectedWeight = _weightLbs ?? 150;
         return Container(
           height: 300,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: 0.06),
+                width: 0.5,
+              ),
+            ),
+          ),
           child: Column(
             children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Select Weight',
+                'Weight',
                 style: AppStyles.mainText().copyWith(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -111,17 +148,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Highlight bar
                     Container(
                       height: 50,
                       margin: const EdgeInsets.symmetric(horizontal: 40),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primaryLight.withOpacity(0.5),
-                          width: 2,
-                        ),
                       ),
                     ),
                     ListWheelScrollView.useDelegate(
@@ -142,42 +174,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Text(
                               '$weight lbs',
                               style: AppStyles.mainText().copyWith(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           );
                         },
-                        childCount: 321, // 80 to 400 lbs
+                        childCount: 321,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _weightLbs = selectedWeight;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  setState(() => _weightLbs = selectedWeight);
+                  Navigator.of(context).pop();
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'Done',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.background,
+                  child: Center(
+                    child: Text(
+                      'Done',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -192,21 +221,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showHeightPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         int selectedHeight = _heightInches ?? 68;
         return Container(
           height: 300,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: 0.06),
+                width: 0.5,
+              ),
+            ),
+          ),
           child: Column(
             children: [
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
-                'Select Height',
+                'Height',
                 style: AppStyles.mainText().copyWith(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -215,17 +261,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Highlight bar
                     Container(
                       height: 50,
                       margin: const EdgeInsets.symmetric(horizontal: 40),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primaryLight.withOpacity(0.5),
-                          width: 2,
-                        ),
                       ),
                     ),
                     ListWheelScrollView.useDelegate(
@@ -248,42 +289,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Text(
                               '$feet\' $remainingInches"',
                               style: AppStyles.mainText().copyWith(
-                                fontSize: 24,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           );
                         },
-                        childCount: 49, // 48 to 96 inches (4' to 8')
+                        childCount: 49,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _heightInches = selectedHeight;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  setState(() => _heightInches = selectedHeight);
+                  Navigator.of(context).pop();
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'Done',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.background,
+                  child: Center(
+                    child: Text(
+                      'Done',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -298,180 +336,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: AppColors.accent,
-                      size: 28,
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.arrow_back_ios_rounded,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Profile',
-                          style: AppStyles.mainHeader().copyWith(
-                            fontSize: 32,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Update your information',
-                          style: AppStyles.questionSubtext(),
-                        ),
-                      ],
+                  const SizedBox(width: 12),
+                  Text(
+                    'Profile',
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Content
+            const SizedBox(height: 28),
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Gender Selection
-                    Text(
-                      'Gender',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    _sectionLabel('Gender'),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        Expanded(
-                          child: _buildGenderOption('Male'),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildGenderOption('Female'),
-                        ),
+                        Expanded(child: _buildGenderOption('Male')),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildGenderOption('Female')),
                       ],
                     ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Weight
-                    Text(
-                      'Weight',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
+
+                    const SizedBox(height: 28),
+
+                    _sectionLabel('Weight'),
+                    const SizedBox(height: 10),
+                    _buildPickerField(
+                      value: _weightLbs != null ? '$_weightLbs lbs' : null,
+                      placeholder: 'Select weight',
                       onTap: _showWeightPicker,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _weightLbs != null
-                                  ? '$_weightLbs lbs'
-                                  : 'Select weight',
-                              style: AppStyles.mainText().copyWith(
-                                fontSize: 16,
-                                color: _weightLbs != null
-                                    ? AppColors.accent
-                                    : AppColors.accent.withOpacity(0.5),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down,
-                              color: AppColors.accent.withOpacity(0.5),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Height
-                    Text(
-                      'Height',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
+
+                    const SizedBox(height: 20),
+
+                    _sectionLabel('Height'),
+                    const SizedBox(height: 10),
+                    _buildPickerField(
+                      value: _heightInches != null
+                          ? '${_heightInches! ~/ 12}\' ${_heightInches! % 12}"'
+                          : null,
+                      placeholder: 'Select height',
                       onTap: _showHeightPicker,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _heightInches != null
-                                  ? '${_heightInches! ~/ 12}\' ${_heightInches! % 12}"'
-                                  : 'Select height',
-                              style: AppStyles.mainText().copyWith(
-                                fontSize: 16,
-                                color: _heightInches != null
-                                    ? AppColors.accent
-                                    : AppColors.accent.withOpacity(0.5),
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down,
-                              color: AppColors.accent.withOpacity(0.5),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Goals
-                    Text(
-                      'Fitness Goals',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+
+                    const SizedBox(height: 28),
+
+                    _sectionLabel('Goals'),
+                    const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -487,68 +426,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               }
                             });
                           },
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary.withOpacity(0.2)
-                                  : AppColors.primary.withOpacity(0.05),
+                                  ? Colors.white.withValues(alpha: 0.10)
+                                  : Colors.white.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.primary.withOpacity(0.2),
-                                width: isSelected ? 2 : 1,
+                                    ? Colors.white.withValues(alpha: 0.20)
+                                    : Colors.white.withValues(alpha: 0.06),
+                                width: 0.5,
                               ),
                             ),
                             child: Text(
                               goal,
                               style: AppStyles.mainText().copyWith(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: isSelected
                                     ? FontWeight.w600
-                                    : FontWeight.normal,
+                                    : FontWeight.w400,
                                 color: isSelected
-                                    ? AppColors.accent
-                                    : AppColors.accent.withOpacity(0.7),
+                                    ? Colors.white.withValues(alpha: 0.85)
+                                    : Colors.white.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    
+
                     const SizedBox(height: 40),
                   ],
                 ),
               ),
             ),
 
-            // Save Button
             Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryLight,
-                    foregroundColor: AppColors.background,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: GestureDetector(
+                onTap: _saveProfile,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      width: 0.5,
                     ),
-                    elevation: 0,
                   ),
-                  child: Text(
-                    'Save Changes',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.background,
+                  child: Center(
+                    child: Text(
+                      'Save Changes',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
                     ),
                   ),
                 ),
@@ -560,33 +501,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: AppStyles.mainText().copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Colors.white.withValues(alpha: 0.4),
+      ),
+    );
+  }
+
+  Widget _buildPickerField({
+    required String? value,
+    required String placeholder,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              value ?? placeholder,
+              style: AppStyles.mainText().copyWith(
+                fontSize: 15,
+                color: value != null
+                    ? AppColors.textPrimary
+                    : Colors.white.withValues(alpha: 0.2),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: Colors.white.withValues(alpha: 0.2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGenderOption(String gender) {
     final isSelected = _selectedGender == gender;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedGender = gender;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+      onTap: () => setState(() => _selectedGender = gender),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.12)
-              : const Color(0xFF1A1A1A),
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.20)
+                : Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
           ),
         ),
         child: Center(
           child: Text(
             gender,
             style: AppStyles.mainText().copyWith(
-              fontSize: 16,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected ? AppColors.accent : AppColors.accent.withOpacity(0.7),
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.4),
             ),
           ),
         ),
@@ -594,4 +587,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-

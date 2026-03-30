@@ -11,7 +11,6 @@ class WorkoutResultsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Group sets by exercise
     final groupedExercises = <String, List<Map<String, dynamic>>>{};
     for (final set in loggedSets) {
       final exercise = set['exercise'] as String;
@@ -20,72 +19,67 @@ class WorkoutResultsDisplay extends StatelessWidget {
       }
       groupedExercises[exercise]!.add(set);
     }
-    
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header - same style as exercise name
           Text(
-            'Logged',
+            'LOGGED',
             style: AppStyles.mainText().copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.0,
-              color: Colors.white.withOpacity(0.5),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
+              color: Colors.white.withValues(alpha: 0.3),
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Exercise cards
+          const SizedBox(height: 14),
           ...groupedExercises.entries.map((entry) {
             final exerciseName = _formatExerciseName(entry.key);
             final sets = entry.value;
-            
+
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 1,
+                    color: Colors.white.withValues(alpha: 0.06),
+                    width: 0.5,
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Exercise name
                     Text(
                       exerciseName.toUpperCase(),
                       style: AppStyles.mainText().copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 1.0,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.35),
                       ),
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Summary: total sets
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Text(
                           '${sets.length}',
                           style: AppStyles.mainText().copyWith(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
                             height: 1.0,
-                            color: AppColors.accent,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -95,9 +89,10 @@ class WorkoutResultsDisplay extends StatelessWidget {
                             Text(
                               'SETS',
                               style: AppStyles.mainText().copyWith(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                                color: Colors.white.withValues(alpha: 0.35),
                               ),
                             ),
                             Text(
@@ -105,7 +100,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                               style: AppStyles.mainText().copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withOpacity(0.4),
+                                color: Colors.white.withValues(alpha: 0.25),
                               ),
                             ),
                           ],
@@ -116,7 +111,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -132,9 +127,8 @@ class WorkoutResultsDisplay extends StatelessWidget {
 
   String _getSetSummary(Map<String, dynamic> set) {
     final durationSeconds = set['duration_seconds'] as int? ?? 0;
-    
+
     if (durationSeconds > 0) {
-      // Duration-based exercise
       final minutes = durationSeconds ~/ 60;
       final seconds = durationSeconds % 60;
       if (minutes > 0) {
@@ -142,7 +136,6 @@ class WorkoutResultsDisplay extends StatelessWidget {
       }
       return '${seconds}s';
     } else {
-      // Weight-based exercise
       final reps = set['reps'];
       final weight = set['weight'];
       if (weight != null && weight > 0) {
@@ -153,4 +146,3 @@ class WorkoutResultsDisplay extends StatelessWidget {
     }
   }
 }
-

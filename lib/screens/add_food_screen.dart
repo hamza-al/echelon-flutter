@@ -8,25 +8,22 @@ import '../models/food_entry.dart';
 
 class AddFoodScreen extends StatefulWidget {
   final FoodEntry? existingEntry;
-  
+
   const AddFoodScreen({super.key, this.existingEntry});
 
   @override
   State<AddFoodScreen> createState() => _AddFoodScreenState();
 }
 
-class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProviderStateMixin {
+class _AddFoodScreenState extends State<AddFoodScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
-  // AI-powered tab controllers
-  final _aiQuantityController = TextEditingController();
+
   final _aiFoodController = TextEditingController();
-  final _aiQuantityFocus = FocusNode();
   final _aiFoodFocus = FocusNode();
   bool _aiIsLoading = false;
   String? _aiErrorMessage;
-  
-  // Manual tab controllers
+
   final _manualNameController = TextEditingController();
   final _manualCaloriesController = TextEditingController();
   final _manualProteinController = TextEditingController();
@@ -38,37 +35,37 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
   final _manualCarbsFocus = FocusNode();
   final _manualFatsFocus = FocusNode();
   String? _manualErrorMessage;
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      // Clear errors when switching tabs
       if (_tabController.indexIsChanging) {
         setState(() {
           _aiErrorMessage = null;
           _manualErrorMessage = null;
         });
-        // Dismiss keyboard
         FocusScope.of(context).unfocus();
       }
     });
-    
-    // If editing, populate the manual tab with existing data
+
     if (widget.existingEntry != null) {
       _manualNameController.text = widget.existingEntry!.name;
-      _manualCaloriesController.text = widget.existingEntry!.calories.toString();
+      _manualCaloriesController.text =
+          widget.existingEntry!.calories.toString();
       if (widget.existingEntry!.protein != null) {
-        _manualProteinController.text = widget.existingEntry!.protein!.toStringAsFixed(1);
+        _manualProteinController.text =
+            widget.existingEntry!.protein!.toStringAsFixed(1);
       }
       if (widget.existingEntry!.carbs != null) {
-        _manualCarbsController.text = widget.existingEntry!.carbs!.toStringAsFixed(1);
+        _manualCarbsController.text =
+            widget.existingEntry!.carbs!.toStringAsFixed(1);
       }
       if (widget.existingEntry!.fats != null) {
-        _manualFatsController.text = widget.existingEntry!.fats!.toStringAsFixed(1);
+        _manualFatsController.text =
+            widget.existingEntry!.fats!.toStringAsFixed(1);
       }
-      // Switch to manual tab by default when editing
       _tabController.index = 1;
     }
   }
@@ -76,9 +73,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
   @override
   void dispose() {
     _tabController.dispose();
-    _aiQuantityController.dispose();
     _aiFoodController.dispose();
-    _aiQuantityFocus.dispose();
     _aiFoodFocus.dispose();
     _manualNameController.dispose();
     _manualCaloriesController.dispose();
@@ -93,14 +88,107 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
     super.dispose();
   }
 
+  InputDecoration _fieldDecoration({
+    required String hint,
+    String? suffix,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: AppStyles.mainText().copyWith(
+        fontSize: 15,
+        color: AppColors.textMuted,
+      ),
+      suffixText: suffix,
+      suffixStyle: AppStyles.mainText().copyWith(
+        fontSize: 13,
+        color: AppColors.textMuted,
+      ),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.04),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 0.5,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.08),
+          width: 0.5,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.20),
+          width: 0.5,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  Widget _buildError(String? message) {
+    if (message == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Text(
+        message,
+        style: AppStyles.mainText().copyWith(
+          fontSize: 13,
+          color: const Color(0xFFFF6B6B),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton({
+    required String label,
+    required VoidCallback? onPressed,
+    bool isLoading = false,
+  }) {
+    return GestureDetector(
+      onTap: isLoading ? null : onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isLoading ? 0.04 : 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.12),
+            width: 0.5,
+          ),
+        ),
+        child: Center(
+          child: isLoading
+              ? SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
+                )
+              : Text(
+                  label,
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _addFoodWithAI() async {
-    final quantity = _aiQuantityController.text.trim();
     final foodItem = _aiFoodController.text.trim();
-    
+
     if (foodItem.isEmpty) {
-      setState(() {
-        _aiErrorMessage = 'Please enter a food item';
-      });
+      setState(() => _aiErrorMessage = 'Describe what you ate');
       return;
     }
 
@@ -112,28 +200,24 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
     try {
       final authService = context.read<AuthService>();
       final caloriesService = CaloriesApiService(authService);
-      
       final response = await caloriesService.getCalories(
-        quantity: quantity,
+        quantity: '1',
         foodItem: foodItem,
       );
 
       if (mounted) {
         await context.read<NutritionStore>().logFood(
-          name: response.itemName,
-          calories: response.calories.round(),
-          protein: response.macros.protein,
-          carbs: response.macros.carbs,
-          fats: response.macros.fats,
-        );
-
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+              name: response.itemName,
+              calories: response.calories.round(),
+              protein: response.macros.protein,
+              carbs: response.macros.carbs,
+              fats: response.macros.fats,
+            );
+        if (mounted) Navigator.of(context).pop();
       }
     } catch (e) {
       setState(() {
-        _aiErrorMessage = 'Failed to get nutrition info. Please try again.';
+        _aiErrorMessage = 'Failed to get nutrition info. Try again.';
         _aiIsLoading = false;
       });
     }
@@ -142,90 +226,66 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
   Future<void> _addFoodManually() async {
     final name = _manualNameController.text.trim();
     final caloriesText = _manualCaloriesController.text.trim();
-    
+
     if (name.isEmpty) {
-      setState(() {
-        _manualErrorMessage = 'Please enter a food name';
-      });
+      setState(() => _manualErrorMessage = 'Please enter a food name');
       return;
     }
-    
     if (caloriesText.isEmpty) {
-      setState(() {
-        _manualErrorMessage = 'Please enter calories';
-      });
+      setState(() => _manualErrorMessage = 'Please enter calories');
       return;
     }
-    
+
     final calories = int.tryParse(caloriesText);
     if (calories == null || calories < 0) {
-      setState(() {
-        _manualErrorMessage = 'Please enter valid calories';
-      });
+      setState(() => _manualErrorMessage = 'Please enter valid calories');
       return;
     }
-    
-    // Parse optional macros
-    double? protein;
-    double? carbs;
-    double? fats;
-    
+
+    double? protein, carbs, fats;
+
     if (_manualProteinController.text.trim().isNotEmpty) {
       protein = double.tryParse(_manualProteinController.text.trim());
       if (protein == null || protein < 0) {
-        setState(() {
-          _manualErrorMessage = 'Please enter valid protein value';
-        });
+        setState(() => _manualErrorMessage = 'Invalid protein value');
         return;
       }
     }
-    
     if (_manualCarbsController.text.trim().isNotEmpty) {
       carbs = double.tryParse(_manualCarbsController.text.trim());
       if (carbs == null || carbs < 0) {
-        setState(() {
-          _manualErrorMessage = 'Please enter valid carbs value';
-        });
+        setState(() => _manualErrorMessage = 'Invalid carbs value');
         return;
       }
     }
-    
     if (_manualFatsController.text.trim().isNotEmpty) {
       fats = double.tryParse(_manualFatsController.text.trim());
       if (fats == null || fats < 0) {
-        setState(() {
-          _manualErrorMessage = 'Please enter valid fats value';
-        });
+        setState(() => _manualErrorMessage = 'Invalid fats value');
         return;
       }
     }
 
     if (mounted) {
-      // Check if we're editing or adding
       if (widget.existingEntry != null) {
-        // Update existing entry
         await context.read<NutritionStore>().updateFood(
-          entryId: widget.existingEntry!.id,
-          name: name,
-          calories: calories,
-          protein: protein,
-          carbs: carbs,
-          fats: fats,
-        );
+              entryId: widget.existingEntry!.id,
+              name: name,
+              calories: calories,
+              protein: protein,
+              carbs: carbs,
+              fats: fats,
+            );
       } else {
-        // Add new entry
         await context.read<NutritionStore>().logFood(
-          name: name,
-          calories: calories,
-          protein: protein,
-          carbs: carbs,
-          fats: fats,
-        );
+              name: name,
+              calories: calories,
+              protein: protein,
+              carbs: carbs,
+              fats: fats,
+            );
       }
-
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      if (mounted) Navigator.of(context).pop();
     }
   }
 
@@ -240,108 +300,75 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: AppColors.accent,
-                        size: 28,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Icon(
+                        Icons.close_rounded,
+                        color: AppColors.textSecondary,
+                        size: 24,
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.existingEntry != null ? 'Edit Food' : 'Log Food',
-                            style: AppStyles.mainHeader().copyWith(
-                              fontSize: 28,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.existingEntry != null ? 'Update your meal' : 'Track your nutrition',
-                            style: AppStyles.questionSubtext().copyWith(
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(width: 16),
+                    Text(
+                      widget.existingEntry != null ? 'Edit Food' : 'Log Food',
+                      style: AppStyles.mainHeader().copyWith(fontSize: 24),
                     ),
                   ],
                 ),
               ),
-              
-              const SizedBox(height: 20),
-              
-              // Tab Bar
+
+              const SizedBox(height: 24),
+
+              // Tab bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      width: 0.5,
+                    ),
                   ),
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    labelColor: AppColors.background,
-                    unselectedLabelColor: AppColors.accent.withOpacity(0.5),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: AppColors.textMuted,
                     labelStyle: AppStyles.mainText().copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                     unselectedLabelStyle: AppStyles.mainText().copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w400,
                     ),
                     labelPadding: EdgeInsets.zero,
                     indicatorSize: TabBarIndicatorSize.tab,
                     dividerColor: Colors.transparent,
-                    tabs: [
-                      Tab(
-                        height: 40,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.auto_awesome, size: 16),
-                            SizedBox(width: 6),
-                            Text('AI-Powered'),
-                          ],
-                        ),
-                      ),
-                      Tab(
-                        height: 40,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 6),
-                            Text('Manual'),
-                          ],
-                        ),
-                      ),
+                    tabs: const [
+                      Tab(height: 38, text: 'AI-Powered'),
+                      Tab(height: 38, text: 'Manual'),
                     ],
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 24),
-              
-              // Tab Views
+
+              const SizedBox(height: 28),
+
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildAIPoweredTab(),
+                    _buildAITab(),
                     _buildManualTab(),
                   ],
                 ),
@@ -353,179 +380,53 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildAIPoweredTab() {
-    return SingleChildScrollView(
+  Widget _buildAITab() {
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Info card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  color: AppColors.primaryLight,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Describe your food naturally and we\'ll calculate the nutrition for you',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 13,
-                      color: AppColors.accent.withOpacity(0.7),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 32),
-          
-          // Quantity Field
-          Text(
-            'Quantity (Optional)',
-            style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _aiQuantityController,
-            focusNode: _aiQuantityFocus,
-            enabled: !_aiIsLoading,
-            style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., 2, 1 cup, 100g',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.05),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            onSubmitted: (_) => _aiFoodFocus.requestFocus(),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Food Item Field
-          Text(
-            'Food Item',
-            style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _aiFoodController,
-            focusNode: _aiFoodFocus,
-            enabled: !_aiIsLoading,
-            style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., grilled chicken breast',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.05),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            textCapitalization: TextCapitalization.sentences,
-            onSubmitted: (_) => _addFoodWithAI(),
-          ),
-          
-          if (_aiErrorMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
+          Expanded(
+            child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 0.5,
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: Colors.red.shade300,
-                    size: 18,
+              child: TextField(
+                controller: _aiFoodController,
+                focusNode: _aiFoodFocus,
+                enabled: !_aiIsLoading,
+                style: AppStyles.mainText().copyWith(fontSize: 15, height: 1.5),
+                maxLines: null,
+                expands: true,
+                textAlignVertical: TextAlignVertical.top,
+                textCapitalization: TextCapitalization.sentences,
+                keyboardType: TextInputType.multiline,
+                decoration: InputDecoration(
+                  hintText: '1 chicken breast\n1 cup rice\n2 eggs scrambled\n...',
+                  hintStyle: AppStyles.mainText().copyWith(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: AppColors.textMuted,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _aiErrorMessage!,
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 13,
-                        color: Colors.red.shade300,
-                      ),
-                    ),
-                  ),
-                ],
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(16),
+                ),
               ),
             ),
-          ],
-          
-          const SizedBox(height: 32),
-          
-          // Add Button
-          ElevatedButton(
-            onPressed: _aiIsLoading ? null : _addFoodWithAI,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryLight,
-              disabledBackgroundColor: AppColors.primaryLight.withOpacity(0.5),
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: _aiIsLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Log Food',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.background,
-                    ),
-                  ),
           ),
-          
-          const SizedBox(height: 24),
+          _buildError(_aiErrorMessage),
+          const SizedBox(height: 16),
+          _buildSubmitButton(
+            label: 'Log Food',
+            onPressed: _addFoodWithAI,
+            isLoading: _aiIsLoading,
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -535,319 +436,101 @@ class _AddFoodScreenState extends State<AddFoodScreen> with SingleTickerProvider
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Info card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.2),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppColors.primaryLight,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Enter nutrition values manually for precise tracking',
-                    style: AppStyles.mainText().copyWith(
-                      fontSize: 13,
-                      color: AppColors.accent.withOpacity(0.7),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 32),
-          
-          // Food Name Field
           Text(
-            'Food Name',
+            'Name',
             style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
-                    TextField(
-                      controller: _manualNameController,
-                      focusNode: _manualNameFocus,
-                      style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., Protein Shake',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.05),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
+          TextField(
+            controller: _manualNameController,
+            focusNode: _manualNameFocus,
+            style: AppStyles.mainText().copyWith(fontSize: 15),
+            decoration: _fieldDecoration(hint: 'Protein Shake'),
             textCapitalization: TextCapitalization.words,
             onSubmitted: (_) => _manualCaloriesFocus.requestFocus(),
           ),
-          
-          const SizedBox(height: 24),
-          
-          // Calories Field
+          const SizedBox(height: 20),
           Text(
             'Calories',
             style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _manualCaloriesController,
             focusNode: _manualCaloriesFocus,
-            style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., 250',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.05),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-              suffixText: 'cal',
-              suffixStyle: AppStyles.mainText().copyWith(
-                fontSize: 14,
-                color: AppColors.accent.withOpacity(0.5),
-              ),
-            ),
+            style: AppStyles.mainText().copyWith(fontSize: 15),
+            decoration: _fieldDecoration(hint: '250', suffix: 'cal'),
             keyboardType: TextInputType.number,
             onSubmitted: (_) => _manualProteinFocus.requestFocus(),
           ),
-          
-          const SizedBox(height: 32),
-          
-          // Macros Section Header
+          const SizedBox(height: 24),
           Text(
-            'Macros (Optional)',
+            'Macros',
             style: AppStyles.mainText().copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Macros Row
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Protein',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accent.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _manualProteinController,
-                      focusNode: _manualProteinFocus,
-                      style: AppStyles.mainText().copyWith(fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                        filled: true,
-                        fillColor: AppColors.primary.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixText: 'g',
-                        suffixStyle: AppStyles.mainText().copyWith(
-                          fontSize: 14,
-                          color: AppColors.accent.withOpacity(0.5),
-                        ),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onSubmitted: (_) => _manualCarbsFocus.requestFocus(),
-                    ),
-                  ],
+                child: TextField(
+                  controller: _manualProteinController,
+                  focusNode: _manualProteinFocus,
+                  style: AppStyles.mainText().copyWith(fontSize: 15),
+                  decoration: _fieldDecoration(hint: 'P', suffix: 'g'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onSubmitted: (_) => _manualCarbsFocus.requestFocus(),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Carbs',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accent.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _manualCarbsController,
-                      focusNode: _manualCarbsFocus,
-                      style: AppStyles.mainText().copyWith(fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                        filled: true,
-                        fillColor: AppColors.primary.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixText: 'g',
-                        suffixStyle: AppStyles.mainText().copyWith(
-                          fontSize: 14,
-                          color: AppColors.accent.withOpacity(0.5),
-                        ),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onSubmitted: (_) => _manualFatsFocus.requestFocus(),
-                    ),
-                  ],
+                child: TextField(
+                  controller: _manualCarbsController,
+                  focusNode: _manualCarbsFocus,
+                  style: AppStyles.mainText().copyWith(fontSize: 15),
+                  decoration: _fieldDecoration(hint: 'C', suffix: 'g'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onSubmitted: (_) => _manualFatsFocus.requestFocus(),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fats',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accent.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _manualFatsController,
-                      focusNode: _manualFatsFocus,
-                      style: AppStyles.mainText().copyWith(fontSize: 16),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                        filled: true,
-                        fillColor: AppColors.primary.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                        suffixText: 'g',
-                        suffixStyle: AppStyles.mainText().copyWith(
-                          fontSize: 14,
-                          color: AppColors.accent.withOpacity(0.5),
-                        ),
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      onSubmitted: (_) => _addFoodManually(),
-                    ),
-                  ],
+                child: TextField(
+                  controller: _manualFatsController,
+                  focusNode: _manualFatsFocus,
+                  style: AppStyles.mainText().copyWith(fontSize: 15),
+                  decoration: _fieldDecoration(hint: 'F', suffix: 'g'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  onSubmitted: (_) => _addFoodManually(),
                 ),
               ),
             ],
           ),
-          
-          if (_manualErrorMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.red.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: Colors.red.shade300,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _manualErrorMessage!,
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 13,
-                        color: Colors.red.shade300,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          
-          const SizedBox(height: 32),
-          
-          // Add Button
-          ElevatedButton(
+          _buildError(_manualErrorMessage),
+          const SizedBox(height: 28),
+          _buildSubmitButton(
+            label: widget.existingEntry != null ? 'Update' : 'Log Food',
             onPressed: _addFoodManually,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryLight,
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              widget.existingEntry != null ? 'Update Food' : 'Log Food',
-              style: AppStyles.mainText().copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.background,
-              ),
-            ),
           ),
-          
           const SizedBox(height: 24),
         ],
       ),
     );
   }
 }
-

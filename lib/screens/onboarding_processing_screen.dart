@@ -1,5 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../styles.dart';
+import '../widgets/pulsing_particle_sphere.dart';
 
 class OnboardingProcessingScreen extends StatefulWidget {
   final String nutritionGoal;
@@ -25,12 +27,16 @@ class OnboardingProcessingScreen extends StatefulWidget {
 }
 
 class _OnboardingProcessingScreenState
-    extends State<OnboardingProcessingScreen> {
+    extends State<OnboardingProcessingScreen>
+    with TickerProviderStateMixin {
   int _currentPhase = 0;
   bool _processingDone = false;
   bool _showPlan = false;
   bool _showButton = false;
-  int _visiblePlanRows = 0;
+  int _visibleCards = 0;
+
+  late AnimationController _progressCtrl;
+  late Animation<double> _progressAnim;
 
   final List<String> _phases = [
     'Analyzing your goals',
@@ -42,27 +48,41 @@ class _OnboardingProcessingScreenState
   @override
   void initState() {
     super.initState();
+    _progressCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 5500),
+    );
+    _progressAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _progressCtrl, curve: Curves.easeInOut),
+    );
+    _progressCtrl.forward();
     _runProcessing();
+  }
+
+  @override
+  void dispose() {
+    _progressCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _runProcessing() async {
     for (int i = 0; i < _phases.length; i++) {
       if (!mounted) return;
       setState(() => _currentPhase = i);
-      await Future.delayed(Duration(milliseconds: 900 + (i * 200)));
+      await Future.delayed(Duration(milliseconds: 1000 + (i * 200)));
     }
 
     if (!mounted) return;
     setState(() => _processingDone = true);
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _showPlan = true);
 
     for (int i = 1; i <= 3; i++) {
-      await Future.delayed(const Duration(milliseconds: 250));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
-      setState(() => _visiblePlanRows = i);
+      setState(() => _visibleCards = i);
     }
 
     await Future.delayed(const Duration(milliseconds: 400));
@@ -82,136 +102,138 @@ class _OnboardingProcessingScreenState
     }
   }
 
+  IconData get _goalIcon {
+    switch (widget.nutritionGoal) {
+      case 'cut':
+        return Icons.local_fire_department_rounded;
+      case 'bulk':
+        return Icons.fitness_center_rounded;
+      case 'maintain':
+      default:
+        return Icons.balance_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            24,
-            0,
-            24,
-            MediaQuery.of(context).padding.bottom + 24,
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 60),
+        child: Column(
+          children: [
+            const SizedBox(height: 48),
 
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              child: Text(
+                _processingDone ? 'Your plan is ready' : 'Setting things up',
+                key: ValueKey(_processingDone),
+                style: AppStyles.mainText().copyWith(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.5,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            if (!_processingDone) ...[
+              const SizedBox(height: 8),
+              AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 300),
                 child: Text(
-                  _processingDone ? 'Your plan is ready' : 'Building your plan',
-                  key: ValueKey(_processingDone),
-                  style: AppStyles.questionText().copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: -0.5,
+                  _phases[_currentPhase],
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.3),
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
+            ],
 
-              const SizedBox(height: 48),
+            Expanded(
+              child: _processingDone ? _buildPlanView() : _buildLoadingView(),
+            ),
 
-              if (!_processingDone) ...[
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (int i = 0; i < _phases.length; i++)
-                        _buildPhaseRow(i),
-                    ],
-                  ),
-                ),
-              ],
-
-              if (_processingDone) ...[
-                Expanded(
-                  child: AnimatedOpacity(
-                    opacity: _showPlan ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 700),
-                    child: AnimatedSlide(
-                      offset:
-                          _showPlan ? Offset.zero : const Offset(0, 0.06),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.easeOutCubic,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 28),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              children: [
-                                _buildPlanRow(
-                                  index: 0,
-                                  value: '${widget.targetCalories}',
-                                  unit: 'cal/day',
-                                  label: _goalLabel,
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  child: Divider(
-                                    color: AppColors.border,
-                                    height: 1,
-                                  ),
-                                ),
-                                _buildPlanRow(
-                                  index: 1,
-                                  value: widget.splitName,
-                                  unit: '',
-                                  label: '${widget.trainingDays} days per week',
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  child: Divider(
-                                    color: AppColors.border,
-                                    height: 1,
-                                  ),
-                                ),
-                                _buildPlanRow(
-                                  index: 2,
-                                  value: widget.goals.length > 2
-                                      ? '${widget.goals.take(2).join(', ')} +${widget.goals.length - 2}'
-                                      : widget.goals.join(', '),
-                                  unit: '',
-                                  label: 'Your goals',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+            AnimatedOpacity(
+              opacity: _showButton ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPad + 24),
+                child: GestureDetector(
+                  onTap: _showButton ? widget.onContinue : null,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Continue',
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-              AnimatedOpacity(
-                opacity: _showButton ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 500),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _showButton ? widget.onContinue : null,
-                    style: AppStyles.primaryButton(),
-                    child: const Text('Try Voice Demo'),
+  Widget _buildLoadingView() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 180,
+          height: 180,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const PulsingParticleSphere(size: 120),
+              AnimatedBuilder(
+                animation: _progressAnim,
+                builder: (context, child) => CustomPaint(
+                  size: const Size(180, 180),
+                  painter: _ProgressRingPainter(
+                    progress: _progressAnim.value,
+                    phaseCount: _phases.length,
+                    currentPhase: _currentPhase,
                   ),
                 ),
               ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 48),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            children: [
+              for (int i = 0; i < _phases.length; i++)
+                _buildPhaseRow(i),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -222,53 +244,94 @@ class _OnboardingProcessingScreenState
 
     return AnimatedOpacity(
       opacity: isVisible ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: isDone
+                  ? Icon(
+                      Icons.check_rounded,
+                      key: const ValueKey('done'),
+                      color: Colors.white.withValues(alpha: 0.3),
+                      size: 16,
+                    )
+                  : isActive
+                      ? SizedBox(
+                          key: const ValueKey('loading'),
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: Colors.white.withValues(alpha: 0.5),
+                          ),
+                        )
+                      : SizedBox(
+                          key: const ValueKey('pending'),
+                          width: 16,
+                          height: 16,
+                          child: Icon(
+                            Icons.circle_outlined,
+                            size: 16,
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
+                        ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _phases[index],
+              style: AppStyles.mainText().copyWith(
+                fontSize: 14,
+                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
+                color: isDone
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : isActive
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanView() {
+    return AnimatedOpacity(
+      opacity: _showPlan ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 600),
       child: AnimatedSlide(
-        offset: isVisible ? Offset.zero : const Offset(0, 0.4),
-        duration: const Duration(milliseconds: 500),
+        offset: _showPlan ? Offset.zero : const Offset(0, 0.04),
+        duration: const Duration(milliseconds: 600),
         curve: Curves.easeOutCubic,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Row(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: isDone
-                    ? Icon(
-                        Icons.check_circle_rounded,
-                        key: const ValueKey('done'),
-                        color: AppColors.textPrimary.withValues(alpha: 0.4),
-                        size: 20,
-                      )
-                    : isActive
-                        ? SizedBox(
-                            key: const ValueKey('loading'),
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.textPrimary,
-                            ),
-                          )
-                        : const SizedBox(
-                            key: ValueKey('pending'),
-                            width: 20,
-                            height: 20,
-                          ),
+              _buildPlanCard(
+                index: 0,
+                icon: _goalIcon,
+                title: '${widget.targetCalories} cal/day',
+                subtitle: _goalLabel,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  _phases[index],
-                  style: AppStyles.mainText().copyWith(
-                    fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                    color: isDone
-                        ? AppColors.textMuted
-                        : isActive
-                            ? AppColors.textPrimary
-                            : AppColors.textMuted,
-                  ),
-                ),
+              const SizedBox(height: 10),
+              _buildPlanCard(
+                index: 1,
+                icon: Icons.calendar_today_rounded,
+                title: widget.splitName,
+                subtitle: '${widget.trainingDays} days per week',
+              ),
+              const SizedBox(height: 10),
+              _buildPlanCard(
+                index: 2,
+                icon: Icons.flag_rounded,
+                title: widget.goals.length > 2
+                    ? '${widget.goals.take(2).join(', ')} +${widget.goals.length - 2}'
+                    : widget.goals.join(', '),
+                subtitle: 'Your focus areas',
               ),
             ],
           ),
@@ -277,61 +340,120 @@ class _OnboardingProcessingScreenState
     );
   }
 
-  Widget _buildPlanRow({
+  Widget _buildPlanCard({
     required int index,
-    required String value,
-    required String unit,
-    required String label,
+    required IconData icon,
+    required String title,
+    required String subtitle,
   }) {
-    final isVisible = _visiblePlanRows > index;
-
+    final isVisible = _visibleCards > index;
     return AnimatedOpacity(
       opacity: isVisible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 400),
       child: AnimatedSlide(
-        offset: isVisible ? Offset.zero : const Offset(0, 0.3),
+        offset: isVisible ? Offset.zero : const Offset(0, 0.2),
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          value,
-                          style: AppStyles.mainText().copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (unit.isNotEmpty) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          unit,
-                          style: AppStyles.caption(),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    label,
-                    style: AppStyles.caption(),
-                  ),
-                ],
-              ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.06),
+              width: 0.5,
             ),
-          ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+class _ProgressRingPainter extends CustomPainter {
+  final double progress;
+  final int phaseCount;
+  final int currentPhase;
+
+  _ProgressRingPainter({
+    required this.progress,
+    required this.phaseCount,
+    required this.currentPhase,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 4;
+
+    final bgPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = Colors.white.withValues(alpha: 0.04);
+    canvas.drawCircle(center, radius, bgPaint);
+
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withValues(alpha: 0.2);
+
+    final sweep = progress * 2 * pi;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -pi / 2,
+      sweep,
+      false,
+      arcPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ProgressRingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+

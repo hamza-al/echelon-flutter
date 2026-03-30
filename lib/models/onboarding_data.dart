@@ -1,4 +1,6 @@
 class OnboardingData {
+  String? name;
+  int? age;
   String? gender;
   String? weight;
   String? height;
@@ -7,6 +9,8 @@ class OnboardingData {
   int targetCalories = 2000;
 
   OnboardingData({
+    this.name,
+    this.age,
     this.gender,
     this.weight,
     this.height,
@@ -16,10 +20,10 @@ class OnboardingData {
   }) : goals = goals ?? [];
 
   bool get isComplete {
-    return weight != null &&
+    return name != null &&
+        weight != null &&
         height != null &&
         goals.isNotEmpty &&
         nutritionGoal != null;
   }
 }
-

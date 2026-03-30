@@ -5,14 +5,14 @@ class ExerciseSelectionScreen extends StatefulWidget {
   const ExerciseSelectionScreen({super.key});
 
   @override
-  State<ExerciseSelectionScreen> createState() => _ExerciseSelectionScreenState();
+  State<ExerciseSelectionScreen> createState() =>
+      _ExerciseSelectionScreenState();
 }
 
 class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _filteredExercises = [];
-  
-  // Exercise vocabulary organized by category
+
   static const Map<String, List<String>> _exercisesByCategory = {
     'Chest': [
       'bench_press',
@@ -183,49 +183,46 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
       'machine_leg_press',
     ],
   };
-  
+
   @override
   void initState() {
     super.initState();
     _updateFilteredExercises('');
     _searchController.addListener(_onSearchChanged);
   }
-  
+
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
-  
+
   void _onSearchChanged() {
     _updateFilteredExercises(_searchController.text);
   }
-  
+
   void _updateFilteredExercises(String query) {
     setState(() {
       if (query.isEmpty) {
-        // Show all exercises when no search query
         _filteredExercises = _exercisesByCategory.values
             .expand((exercises) => exercises)
             .toSet()
             .toList()
           ..sort();
       } else {
-        // Filter exercises based on query
         final lowerQuery = query.toLowerCase();
         _filteredExercises = _exercisesByCategory.values
             .expand((exercises) => exercises)
-            .where((exercise) => _formatExerciseName(exercise)
-                .toLowerCase()
-                .contains(lowerQuery))
+            .where((exercise) =>
+                _formatExerciseName(exercise).toLowerCase().contains(lowerQuery))
             .toSet()
             .toList()
           ..sort();
       }
     });
   }
-  
+
   String _formatExerciseName(String exercise) {
     return exercise
         .replaceAll('_', ' ')
@@ -233,7 +230,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
         .map((word) => word[0].toUpperCase() + word.substring(1))
         .join(' ');
   }
-  
+
   String? _getCategoryForExercise(String exercise) {
     for (final entry in _exercisesByCategory.entries) {
       if (entry.value.contains(exercise)) {
@@ -242,156 +239,183 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
     }
     return null;
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        backgroundColor: AppColors.background,
         body: SafeArea(
           child: Column(
             children: [
-              // Header
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppColors.accent,
-                        size: 28,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.arrow_back_ios_rounded,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
                       ),
-                      onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Select Exercise',
-                        style: AppStyles.mainHeader().copyWith(
-                          fontSize: 24,
-                        ),
+                    Text(
+                      'Select Exercise',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Search bar
+
+              const SizedBox(height: 16),
+
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TextField(
                   controller: _searchController,
                   autofocus: true,
-                  style: AppStyles.mainText().copyWith(fontSize: 16),
+                  style: AppStyles.mainText().copyWith(fontSize: 15),
                   decoration: InputDecoration(
                     hintText: 'Search exercises...',
-                    hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
+                    hintStyle: AppStyles.mainText().copyWith(
+                      fontSize: 15,
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                     prefixIcon: Icon(
-                      Icons.search,
-                      color: AppColors.accent.withOpacity(0.5),
+                      Icons.search_rounded,
+                      color: Colors.white.withValues(alpha: 0.25),
+                      size: 20,
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: AppColors.accent.withOpacity(0.5),
-                            ),
-                            onPressed: () {
+                        ? GestureDetector(
+                            onTap: () {
                               _searchController.clear();
                               FocusScope.of(context).requestFocus(FocusNode());
                             },
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white.withValues(alpha: 0.25),
+                              size: 18,
+                            ),
                           )
                         : null,
                     filled: true,
-                    fillColor: AppColors.primary.withOpacity(0.1),
+                    fillColor: Colors.white.withValues(alpha: 0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        width: 0.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        width: 0.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 0.5,
+                      ),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
                   ),
-                  onTap: () {
-                    // Ensure keyboard stays open when tapping
-                  },
                 ),
               ),
-              
-              const SizedBox(height: 16),
-              
-              // Exercise list
+
+              const SizedBox(height: 12),
+
               Expanded(
                 child: _filteredExercises.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: AppColors.accent.withOpacity(0.3),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No exercises found',
-                              style: AppStyles.mainText().copyWith(
-                                color: AppColors.accent.withOpacity(0.5),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          'No exercises found',
+                          style: AppStyles.mainText().copyWith(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         itemCount: _filteredExercises.length,
                         itemBuilder: (context, index) {
                           final exercise = _filteredExercises[index];
                           final category = _getCategoryForExercise(exercise);
-                          
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.accent.withOpacity(0.1),
-                              ),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
+
+                          return GestureDetector(
+                            onTap: () {
+                              FocusScope.of(context).unfocus();
+                              Navigator.pop(context, exercise);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 8,
+                                vertical: 14,
                               ),
-                              title: Text(
-                                _formatExerciseName(exercise),
-                                style: AppStyles.mainText().copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.02),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.04),
+                                  width: 0.5,
                                 ),
                               ),
-                              subtitle: category != null
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        category,
-                                        style: AppStyles.questionSubtext().copyWith(
-                                          fontSize: 13,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _formatExerciseName(exercise),
+                                          style:
+                                              AppStyles.mainText().copyWith(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
-                                      ),
-                                    )
-                                  : null,
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: AppColors.accent.withOpacity(0.3),
+                                        if (category != null) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            category,
+                                            style:
+                                                AppStyles.mainText().copyWith(
+                                              fontSize: 12,
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.25),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 18,
+                                    color:
+                                        Colors.white.withValues(alpha: 0.15),
+                                  ),
+                                ],
                               ),
-                              onTap: () {
-                                // Dismiss keyboard before navigating back
-                                FocusScope.of(context).unfocus();
-                                Navigator.pop(context, exercise);
-                              },
                             ),
                           );
                         },
@@ -404,4 +428,3 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
     );
   }
 }
-

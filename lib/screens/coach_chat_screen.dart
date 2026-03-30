@@ -112,7 +112,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                                     child: Text(
                                       'Clear',
                                       style: AppStyles.mainText().copyWith(
-                                        color: AppColors.primaryLight,
+                                        color: const Color(0xFFFF6B6B),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -340,70 +340,78 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
         code: AppStyles.mainText().copyWith(
           fontSize: 14,
           fontFamily: 'monospace',
-          color: AppColors.primaryLight,
-          backgroundColor: AppColors.background,
+          color: Colors.white.withValues(alpha: 0.7),
+          backgroundColor: Colors.white.withValues(alpha: 0.06),
         ),
         listBullet: AppStyles.mainText().copyWith(
           fontSize: 15,
-          color: AppColors.primaryLight,
+          color: Colors.white.withValues(alpha: 0.5),
         ),
       );
 
   Widget _buildMessageBubble(
       ChatMessage message, bool isNewAssistantMessage) {
-    final shouldFadeIn =
+    final shouldAnimate =
         isNewAssistantMessage && !_animatedMessageIds.contains(message.id);
-    if (shouldFadeIn) {
+    if (shouldAnimate) {
       _animatedMessageIds.add(message.id);
     }
 
-    Widget content;
     if (message.isUser) {
-      content = Text(
-        message.text,
-        style: AppStyles.mainText().copyWith(
-          fontSize: 15,
-          color: AppColors.background,
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Flexible(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.10),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  message.text,
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 15,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      );
-    } else {
-      content = MarkdownBody(
-        data: message.text,
-        styleSheet: _assistantMarkdownStyle,
       );
     }
 
-    Widget bubble = Padding(
+    return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Flexible(
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: message.isUser ? 16 : 0,
-                vertical: message.isUser ? 12 : 0,
-              ),
-              decoration: message.isUser
-                  ? BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(16),
-                    )
-                  : null,
-              child: content,
-            ),
+            child: shouldAnimate
+                ? _FadeIn(
+                    key: ValueKey('fade_${message.id}'),
+                    child: MarkdownBody(
+                      data: message.text,
+                      styleSheet: _assistantMarkdownStyle,
+                    ),
+                  )
+                : MarkdownBody(
+                    data: message.text,
+                    styleSheet: _assistantMarkdownStyle,
+                  ),
           ),
         ],
       ),
     );
-
-    if (shouldFadeIn) {
-      return _FadeInWidget(key: ValueKey('fade_${message.id}'), child: bubble);
-    }
-
-    return bubble;
   }
 }
 
@@ -439,17 +447,16 @@ class _GlassInputPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _FadeInWidget extends StatefulWidget {
+class _FadeIn extends StatefulWidget {
   final Widget child;
 
-  const _FadeInWidget({super.key, required this.child});
+  const _FadeIn({super.key, required this.child});
 
   @override
-  State<_FadeInWidget> createState() => _FadeInWidgetState();
+  State<_FadeIn> createState() => _FadeInState();
 }
 
-class _FadeInWidgetState extends State<_FadeInWidget>
-    with SingleTickerProviderStateMixin {
+class _FadeInState extends State<_FadeIn> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _opacity;
 
@@ -458,9 +465,9 @@ class _FadeInWidgetState extends State<_FadeInWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 600),
     );
-    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _controller.forward();
   }
 

@@ -629,9 +629,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade800,
+        content: Text(
+          message,
+          style: AppStyles.mainText().copyWith(fontSize: 13, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF2A1515),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -719,74 +723,46 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Dismiss keyboard when tapping outside
         if (_selectedTab == 1) {
           FocusScope.of(context).unfocus();
         }
       },
       child: Scaffold(
+        backgroundColor: AppColors.background,
         body: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              Column(
-                children: [
-                  // Header with close button and tab control
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Row(
-                      children: [
-                        // Close button
-                        IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: AppColors.accent,
-                            size: 28,
-                          ),
-                          onPressed: _endWorkout,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: _endWorkout,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          shape: BoxShape.circle,
                         ),
-                        
-                        const Spacer(),
-                        
-                        // Tab control
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildTabButton(
-                                label: 'Voice',
-                                icon: Icons.mic,
-                                index: 0,
-                              ),
-                              const SizedBox(width: 4),
-                              _buildTabButton(
-                                label: 'Manual',
-                                icon: Icons.edit,
-                                index: 1,
-                              ),
-                            ],
-                          ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          size: 18,
                         ),
-                        
-                        const Spacer(),
-                        
-                        // Spacer to balance the close button
-                        const SizedBox(width: 48),
-                      ],
+                      ),
                     ),
-                  ),
-                  
-                  // Main content area
-                  Expanded(
-                    child: _selectedTab == 0 
-                        ? _buildVoiceContent()
-                        : _buildManualContent(),
-                  ),
-                ],
+                    const Spacer(),
+                    _buildToggle(),
+                    const Spacer(),
+                    const SizedBox(width: 36),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _selectedTab == 0
+                    ? _buildVoiceContent()
+                    : _buildManualContent(),
               ),
             ],
           ),
@@ -795,54 +771,66 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     );
   }
   
-  Widget _buildTabButton({
-    required String label,
-    required IconData icon,
-    required int index,
-  }) {
+  Widget _buildToggle() {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildToggleOption('Voice', Icons.mic_none_rounded, 0),
+          _buildToggleOption('Manual', Icons.edit_outlined, 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleOption(String label, IconData icon, int index) {
     final isSelected = _selectedTab == index;
-    
+
     return GestureDetector(
       onTap: () async {
         await _stopAllAudioAndRecording();
-        
-        setState(() {
-          _selectedTab = index;
-        });
+        setState(() => _selectedTab = index);
         FocusScope.of(context).unfocus();
-        
-        // Auto-start listening when switching to voice tab
-        if (index == 0) {
-          await _startListening();
-        }
+        if (index == 0) await _startListening();
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? AppColors.primaryLight 
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.10)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 18,
-              color: isSelected 
-                  ? AppColors.background 
-                  : AppColors.accent.withOpacity(0.5),
+              size: 16,
+              color: isSelected
+                  ? Colors.white.withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
               label,
               style: AppStyles.mainText().copyWith(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected 
-                    ? AppColors.background 
-                    : AppColors.accent.withOpacity(0.5),
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -858,12 +846,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Status text
           Text(
             _statusText,
             style: AppStyles.mainText().copyWith(
-              fontSize: 16,
-              color: AppColors.accent.withOpacity(0.7),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.45),
             ),
           ),
           
@@ -932,7 +920,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
           if (!_showRestTimer && !_showResults)
             const SizedBox(height: 40),
           
-          // Hint text
           Text(
             _isProcessing
                 ? ''
@@ -941,8 +928,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                     : _isListening
                         ? 'Speak naturally — hands free'
                         : '',
-            style: AppStyles.questionSubtext().copyWith(
-              fontSize: 14,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.25),
             ),
           ),
         ],
@@ -950,32 +938,66 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     );
   }
   
+  InputDecoration _glassField({required String hint, Widget? suffix}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: AppStyles.mainText().copyWith(
+        fontSize: 15,
+        color: Colors.white.withValues(alpha: 0.2),
+      ),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.04),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 0.5,
+        ),
+      ),
+      suffixIcon: suffix,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
   Widget _buildManualContent() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 20),
-          
-          // Title
+          const SizedBox(height: 32),
+
           Text(
             'Log a Set',
-            style: AppStyles.mainHeader().copyWith(
-              fontSize: 28,
+            style: AppStyles.mainText().copyWith(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
           ),
-          
-          const SizedBox(height: 40),
-          
-          // Exercise name field
+
+          const SizedBox(height: 36),
+
           Text(
             'Exercise',
             style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.4),
             ),
           ),
           const SizedBox(height: 8),
@@ -984,125 +1006,108 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
             child: AbsorbPointer(
               child: TextField(
                 controller: _exerciseController,
-                style: AppStyles.mainText().copyWith(fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: 'Tap to select',
-                  hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-                  filled: true,
-                  fillColor: AppColors.primary.withOpacity(0.1),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: AppColors.accent.withOpacity(0.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
+                style: AppStyles.mainText().copyWith(fontSize: 15),
+                decoration: _glassField(
+                  hint: 'Tap to select',
+                  suffix: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                 ),
               ),
             ),
           ),
-          
-          const SizedBox(height: 24),
-          
-          // Reps field
-          Text(
-            'Reps',
-            style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
-            ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Reps',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _repsController,
+                      focusNode: _repsFocusNode,
+                      style: AppStyles.mainText().copyWith(fontSize: 15),
+                      decoration: _glassField(hint: '10'),
+                      keyboardType: TextInputType.number,
+                      onSubmitted: (_) => _weightFocusNode.requestFocus(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Weight (lbs)',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _weightController,
+                      focusNode: _weightFocusNode,
+                      style: AppStyles.mainText().copyWith(fontSize: 15),
+                      decoration: _glassField(hint: '135'),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      onSubmitted: (_) => _logManualSet(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _repsController,
-            focusNode: _repsFocusNode,
-            style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., 10',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.1),
-              border: OutlineInputBorder(
+
+          const SizedBox(height: 32),
+
+          GestureDetector(
+            onTap: _logManualSet,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.10),
+                  width: 0.5,
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
+              child: Center(
+                child: Text(
+                  'Log Set',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
               ),
             ),
-            keyboardType: TextInputType.number,
-            onSubmitted: (_) => _weightFocusNode.requestFocus(),
           ),
-          
+
           const SizedBox(height: 24),
-          
-          // Weight field (optional)
-          Text(
-            'Weight (lbs) - Optional',
-            style: AppStyles.mainText().copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.accent.withOpacity(0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _weightController,
-            focusNode: _weightFocusNode,
-            style: AppStyles.mainText().copyWith(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: 'e.g., 135',
-              hintStyle: AppStyles.questionSubtext().copyWith(fontSize: 16),
-              filled: true,
-              fillColor: AppColors.primary.withOpacity(0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onSubmitted: (_) => _logManualSet(),
-          ),
-          
-          const SizedBox(height: 40),
-          
-          // Log button
-          ElevatedButton(
-            onPressed: _logManualSet,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryLight,
-              foregroundColor: AppColors.background,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Log Set',
-              style: AppStyles.mainText().copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.background,
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Workout results (for manual mode)
-          if (_showResults && _lastLoggedSets.isNotEmpty && _fadeAnimation != null)
+
+          if (_showResults &&
+              _lastLoggedSets.isNotEmpty &&
+              _fadeAnimation != null)
             FadeTransition(
               opacity: _fadeAnimation!,
               child: WorkoutResultsDisplay(

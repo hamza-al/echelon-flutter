@@ -30,13 +30,15 @@ class UserAdapter extends TypeAdapter<User> {
       customProtein: (fields[10] as num?)?.toDouble(),
       customCarbs: (fields[11] as num?)?.toDouble(),
       customFats: (fields[12] as num?)?.toDouble(),
+      name: fields[13] as String?,
+      age: (fields[14] as num?)?.toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.gender)
       ..writeByte(1)
@@ -62,7 +64,11 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(11)
       ..write(obj.customCarbs)
       ..writeByte(12)
-      ..write(obj.customFats);
+      ..write(obj.customFats)
+      ..writeByte(13)
+      ..write(obj.name)
+      ..writeByte(14)
+      ..write(obj.age);
   }
 
   @override

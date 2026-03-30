@@ -29,7 +29,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
 
   Future<void> _changeSplit() async {
     final allSplits = WorkoutSplit.getAllSplits();
-    
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -41,29 +41,39 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
           maxChildSize: 0.9,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    width: 0.5,
+                  ),
+                ),
               ),
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Container(
-                    width: 40,
+                    width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      'Choose Your Split',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Choose Split',
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -71,6 +81,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   Expanded(
                     child: ListView.builder(
                       controller: scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: allSplits.length,
                       itemBuilder: (context, index) {
                         return _buildSplitOption(allSplits[index]);
@@ -90,28 +101,27 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
   Widget _buildSplitOption(WorkoutSplit split) {
     final isSelected = split.splitType == _currentSplit.splitType;
     final isCustom = split.splitType == 'Custom';
-    
+
     return GestureDetector(
       onTap: () async {
         if (isCustom) {
-          // Navigate to custom split editor
           final customSplit = await Navigator.of(context).push<WorkoutSplit>(
             MaterialPageRoute(
               builder: (context) => CustomSplitEditorScreen(
-                initialSplit: _currentSplit.splitType == 'Custom' ? _currentSplit : null,
+                initialSplit: _currentSplit.splitType == 'Custom'
+                    ? _currentSplit
+                    : null,
               ),
             ),
           );
-          
+
           if (customSplit != null && mounted) {
             await SplitService.setSplit(customSplit);
             setState(() {
               _currentSplit = customSplit;
               _loadSchedule();
             });
-            if (mounted) {
-              Navigator.of(context).pop();
-            }
+            if (mounted) Navigator.of(context).pop();
           }
         } else {
           await SplitService.setSplit(split);
@@ -119,36 +129,26 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             _currentSplit = split;
             _loadSchedule();
           });
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
+          if (mounted) Navigator.of(context).pop();
         }
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+        margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected 
-                ? AppColors.primaryLight 
-                : AppColors.accent.withOpacity(0.2),
-            width: isSelected ? 2 : 1,
+            color: isSelected
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.06),
+            width: 0.5,
           ),
         ),
         child: Row(
           children: [
-            // Purple tab on the left
-            Container(
-              width: 4,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryLight : Colors.transparent,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,19 +156,23 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   Text(
                     split.splitType,
                     style: AppStyles.mainText().copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? AppColors.primaryLight : AppColors.accent,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.textPrimary
+                          : Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isCustom 
+                    isCustom
                         ? 'Create your own schedule'
-                        : split.dayNames.where((d) => d != 'Rest').join(' • '),
+                        : split.dayNames
+                            .where((d) => d != 'Rest')
+                            .join(' · '),
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: AppColors.accent.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.35),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -177,16 +181,16 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
               ),
             ),
             if (isSelected)
-              const Icon(
-                Icons.check_circle,
-                color: AppColors.primaryLight,
-                size: 24,
+              Icon(
+                Icons.check_rounded,
+                color: Colors.white.withValues(alpha: 0.6),
+                size: 20,
               )
             else if (isCustom)
               Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.accent.withOpacity(0.4),
-                size: 16,
+                Icons.chevron_right_rounded,
+                color: Colors.white.withValues(alpha: 0.2),
+                size: 20,
               ),
           ],
         ),
@@ -205,10 +209,16 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             // Header
             Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-                  onPressed: () => Navigator.of(context).pop(),
-                  padding: EdgeInsets.zero,
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.arrow_back_ios_rounded,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -217,16 +227,17 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     children: [
                       Text(
                         'Weekly Schedule',
-                        style: AppStyles.mainHeader().copyWith(
-                          fontSize: 28,
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         _currentSplit.splitType,
-                        style: AppStyles.questionSubtext().copyWith(
-                          fontSize: 14,
-                          color: AppColors.primaryLight,
+                        style: AppStyles.mainText().copyWith(
+                          fontSize: 13,
+                          color: AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -235,12 +246,11 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
 
-            // Vertically stacked day cards
             ..._weekSchedule.map((day) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: _buildDayCard(
                   date: day['date'] as DateTime,
                   dayName: day['dayName'] as String,
@@ -248,77 +258,67 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   isToday: day['isToday'] as bool,
                 ),
               );
-            }).toList(),
+            }),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Change split button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _changeSplit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.cardBackground,
-                  foregroundColor: AppColors.accent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: AppColors.accent.withOpacity(0.2),
-                      width: 1,
-                    ),
+            GestureDetector(
+              onTap: _changeSplit,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    width: 0.5,
                   ),
-                  elevation: 0,
                 ),
-                child: Text(
-                  'Change Split',
-                  style: AppStyles.mainText().copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                child: Center(
+                  child: Text(
+                    'Change Split',
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Split info
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white.withValues(alpha: 0.02),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: AppColors.primaryLight.withOpacity(0.3),
-                  width: 1,
+                  color: Colors.white.withValues(alpha: 0.06),
+                  width: 0.5,
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppColors.primaryLight,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'About ${_currentSplit.splitType}',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'About ${_currentSplit.splitType}',
+                    style: AppStyles.mainText().copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     _getSplitDescription(_currentSplit.splitType),
                     style: AppStyles.mainText().copyWith(
-                      fontSize: 14,
-                      color: AppColors.accent.withOpacity(0.8),
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.35),
                       height: 1.5,
                     ),
                   ),
@@ -340,88 +340,87 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
     final isRest = workout == 'Rest';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isToday ? AppColors.primaryLight : AppColors.background,
-        borderRadius: BorderRadius.circular(16),
+        color: isToday
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isToday 
-              ? AppColors.primaryLight 
-              : AppColors.accent.withOpacity(0.2),
-          width: isToday ? 2 : 1,
+          color: isToday
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.06),
+          width: 0.5,
         ),
       ),
       child: Row(
         children: [
-          // Purple tab on the left for non-today cards
-          if (!isToday)
-            Container(
-              width: 3,
-              height: 50,
-              decoration: BoxDecoration(
-                color: isRest 
-                    ? Colors.transparent 
-                    : AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(1.5),
-              ),
+          SizedBox(
+            width: 42,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dayName,
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isToday
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.35),
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  '${date.day}',
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isToday
+                        ? AppColors.textPrimary
+                        : Colors.white.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
             ),
-          
-          if (!isToday) const SizedBox(width: 16),
-          
-          // Date and day name
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dayName,
-                style: AppStyles.mainText().copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isToday 
-                      ? AppColors.background 
-                      : AppColors.accent.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${date.day}',
-                style: AppStyles.mainText().copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: isToday ? AppColors.background : AppColors.accent,
-                ),
-              ),
-            ],
           ),
-          
-          const Spacer(),
-          
-          // Workout label
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: isToday 
-                  ? AppColors.background.withOpacity(0.2) 
-                  : (isRest 
-                      ? AppColors.accent.withOpacity(0.1) 
-                      : AppColors.primaryLight.withOpacity(0.12)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              workout,
-              style: AppStyles.mainText().copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-                color: isToday 
-                    ? AppColors.background 
-                    : (isRest 
-                        ? AppColors.accent.withOpacity(0.5) 
-                        : AppColors.primaryLight),
-              ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (isToday)
+                  Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'TODAY',
+                      style: AppStyles.mainText().copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                Text(
+                  workout,
+                  style: AppStyles.mainText().copyWith(
+                    fontSize: 14,
+                    fontWeight: isRest ? FontWeight.w400 : FontWeight.w600,
+                    color: isRest
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : isToday
+                            ? AppColors.textPrimary
+                            : Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

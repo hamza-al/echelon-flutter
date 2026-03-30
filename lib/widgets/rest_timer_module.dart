@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../styles.dart';
 
@@ -20,26 +21,17 @@ class _RestTimerModuleState extends State<RestTimerModule>
     with SingleTickerProviderStateMixin {
   late int _remainingSeconds;
   Timer? _timer;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+  late AnimationController _progressController;
 
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.durationSeconds;
 
-    // Pulse animation for the timer
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+    _progressController = AnimationController(
+      duration: Duration(seconds: widget.durationSeconds),
       vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    _pulseController.repeat(reverse: true);
+    )..forward();
 
     _startTimer();
   }
@@ -47,7 +39,7 @@ class _RestTimerModuleState extends State<RestTimerModule>
   @override
   void dispose() {
     _timer?.cancel();
-    _pulseController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -80,97 +72,123 @@ class _RestTimerModuleState extends State<RestTimerModule>
 
   @override
   Widget build(BuildContext context) {
-    final progress = 1.0 - (_remainingSeconds / widget.durationSeconds);
-    final isAlmostDone = _remainingSeconds <= 5;
+    final isAlmostDone = _remainingSeconds <= 5 && _remainingSeconds > 0;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isAlmostDone
-              ? AppColors.recordingAccent.withOpacity(0.6)
-              : AppColors.primary.withOpacity(0.3),
-          width: 1.5,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'REST',
+          style: AppStyles.mainText().copyWith(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.5,
+            color: Colors.white.withValues(alpha: 0.25),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (isAlmostDone
-                    ? AppColors.recordingAccent
-                    : AppColors.primary)
-                .withOpacity(0.15),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Label
-          Text(
-            'Rest Timer',
-            style: AppStyles.questionSubtext().copyWith(
-              fontSize: 12,
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-          // Timer display
-          ScaleTransition(
-            scale: isAlmostDone ? _pulseAnimation : AlwaysStoppedAnimation(1.0),
-            child: Text(
-              _formatTime(_remainingSeconds),
-              style: AppStyles.secondaryHeader().copyWith(
-                fontSize: 48,
-                color: isAlmostDone
-                    ? AppColors.recordingAccent
-                    : AppColors.accent,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 6,
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: AppColors.accent.withOpacity(0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  isAlmostDone ? AppColors.recordingAccent : AppColors.primary,
+        SizedBox(
+          width: 100,
+          height: 100,
+          child: AnimatedBuilder2(
+            listenable: _progressController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: _RingPainter(
+                  progress: _progressController.value,
+                  isAlmostDone: isAlmostDone,
+                ),
+                child: child,
+              );
+            },
+            child: Center(
+              child: Text(
+                _formatTime(_remainingSeconds),
+                style: AppStyles.mainText().copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: isAlmostDone
+                      ? const Color(0xFFFF6B6B)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
           ),
+        ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 14),
 
-          // Skip button
-          TextButton(
-            onPressed: _skipTimer,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            ),
-            child: Text(
-              'Skip',
-              style: AppStyles.questionSubtext().copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accent.withOpacity(0.5),
-              ),
+        GestureDetector(
+          onTap: _skipTimer,
+          child: Text(
+            'Skip',
+            style: AppStyles.mainText().copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.25),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
+class _RingPainter extends CustomPainter {
+  final double progress;
+  final bool isAlmostDone;
+
+  _RingPainter({required this.progress, required this.isAlmostDone});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 4;
+    const strokeWidth = 3.0;
+
+    final bgPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    canvas.drawCircle(center, radius, bgPaint);
+
+    final fgPaint = Paint()
+      ..color = isAlmostDone
+          ? const Color(0xFFFF6B6B).withValues(alpha: 0.8)
+          : Colors.white.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final sweepAngle = 2 * pi * progress;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -pi / 2,
+      sweepAngle,
+      false,
+      fgPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.isAlmostDone != isAlmostDone;
+}
+
+class AnimatedBuilder2 extends AnimatedWidget {
+  final Widget? child;
+  final Widget Function(BuildContext, Widget?) builder;
+
+  const AnimatedBuilder2({
+    super.key,
+    required super.listenable,
+    required this.builder,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) => builder(context, child);
+}

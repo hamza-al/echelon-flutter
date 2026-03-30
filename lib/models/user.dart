@@ -43,6 +43,12 @@ class User extends HiveObject {
   @HiveField(12)
   double? customFats;
 
+  @HiveField(13)
+  String? name;
+
+  @HiveField(14)
+  int? age;
+
   User({
     this.gender,
     this.weight,
@@ -57,17 +63,22 @@ class User extends HiveObject {
     this.customProtein,
     this.customCarbs,
     this.customFats,
+    this.name,
+    this.age,
   })  : goals = goals ?? [],
         createdAt = createdAt ?? DateTime.now(),
         lastUpdated = lastUpdated ?? DateTime.now();
 
-  // Update user info from onboarding data
   void updateFromOnboarding({
+    String? name,
+    int? age,
     String? gender,
     String? weight,
     String? height,
     List<String>? goals,
   }) {
+    if (name != null) this.name = name;
+    if (age != null) this.age = age;
     if (gender != null) this.gender = gender;
     if (weight != null) this.weight = weight;
     if (height != null) this.height = height;

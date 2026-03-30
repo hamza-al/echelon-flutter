@@ -260,6 +260,83 @@ class WorkoutService {
     await _workoutBox!.clear();
   }
 
+  static Future<void> seedMockData() async {
+    if (_workoutBox == null) throw Exception('WorkoutService not initialized.');
+    if (_workoutBox!.isNotEmpty) return;
+
+    final now = DateTime.now();
+
+    Workout make(DateTime start, int durationMin, List<Exercise> exercises) {
+      final w = Workout(
+        startTime: start,
+        exercises: exercises,
+        isCompleted: true,
+      );
+      w.endTime = start.add(Duration(minutes: durationMin));
+      return w;
+    }
+
+    Exercise ex(String name, List<ExerciseSet> sets,
+        {String type = 'weight'}) {
+      return Exercise(name: name, sets: sets, exerciseType: type);
+    }
+
+    ExerciseSet ws(int setNum, int reps, double weight) {
+      return ExerciseSet(
+          setNumber: setNum, reps: reps, weight: weight, isBodyweight: false);
+    }
+
+    ExerciseSet bw(int setNum, int reps) {
+      return ExerciseSet(
+          setNumber: setNum, reps: reps, isBodyweight: true);
+    }
+
+    ExerciseSet dur(int setNum, int seconds) {
+      return ExerciseSet(setNumber: setNum, durationSeconds: seconds);
+    }
+
+    final workouts = <Workout>[
+      make(now.subtract(const Duration(hours: 3)), 52, [
+        ex('bench_press', [ws(1, 10, 185), ws(2, 8, 205), ws(3, 6, 225), ws(4, 5, 225)]),
+        ex('overhead_press', [ws(1, 10, 95), ws(2, 8, 105), ws(3, 8, 105)]),
+        ex('incline_dumbbell_press', [ws(1, 12, 60), ws(2, 10, 65), ws(3, 10, 65)]),
+        ex('tricep_dips', [bw(1, 15), bw(2, 12), bw(3, 10)]),
+      ]),
+      make(now.subtract(const Duration(days: 1, hours: 5)), 58, [
+        ex('deadlift', [ws(1, 8, 275), ws(2, 6, 315), ws(3, 5, 335), ws(4, 3, 365)]),
+        ex('barbell_row', [ws(1, 10, 155), ws(2, 8, 175), ws(3, 8, 175)]),
+        ex('pull_ups', [bw(1, 12), bw(2, 10), bw(3, 8)]),
+        ex('barbell_curl', [ws(1, 12, 65), ws(2, 10, 75), ws(3, 10, 75)]),
+      ]),
+      make(now.subtract(const Duration(days: 3, hours: 2)), 48, [
+        ex('squat', [ws(1, 10, 225), ws(2, 8, 255), ws(3, 6, 275), ws(4, 5, 275)]),
+        ex('leg_press', [ws(1, 12, 360), ws(2, 10, 410), ws(3, 10, 410)]),
+        ex('lunges', [ws(1, 12, 40), ws(2, 12, 40), ws(3, 10, 50)]),
+      ]),
+      make(now.subtract(const Duration(days: 5, hours: 4)), 45, [
+        ex('bench_press', [ws(1, 10, 185), ws(2, 8, 205), ws(3, 7, 215)]),
+        ex('cable_fly', [ws(1, 15, 30), ws(2, 12, 35), ws(3, 12, 35)]),
+        ex('lateral_raise', [ws(1, 15, 20), ws(2, 12, 25), ws(3, 12, 25)]),
+      ]),
+      make(now.subtract(const Duration(days: 7, hours: 6)), 55, [
+        ex('barbell_row', [ws(1, 10, 155), ws(2, 8, 175), ws(3, 6, 185)]),
+        ex('lat_pulldown', [ws(1, 12, 130), ws(2, 10, 145), ws(3, 10, 145)]),
+        ex('face_pulls', [ws(1, 15, 40), ws(2, 15, 45), ws(3, 15, 45)]),
+        ex('hammer_curl', [ws(1, 12, 30), ws(2, 10, 35), ws(3, 10, 35)]),
+      ]),
+      make(now.subtract(const Duration(days: 10, hours: 3)), 50, [
+        ex('squat', [ws(1, 10, 215), ws(2, 8, 245), ws(3, 6, 265)]),
+        ex('romanian_deadlift', [ws(1, 10, 185), ws(2, 8, 205), ws(3, 8, 205)]),
+        ex('leg_curl', [ws(1, 12, 90), ws(2, 10, 100), ws(3, 10, 100)]),
+        ex('plank', [dur(1, 60), dur(2, 60), dur(3, 45)], type: 'duration'),
+      ]),
+    ];
+
+    for (final w in workouts) {
+      await _workoutBox!.add(w);
+    }
+  }
+
   // Close the box
   static Future<void> close() async {
     await _workoutBox?.close();
