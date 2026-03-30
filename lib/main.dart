@@ -25,13 +25,10 @@ import 'services/auth_service.dart';
 import 'services/workout_audio_cache.dart';
 import 'services/split_service.dart';
 import 'services/class_service.dart';
+import 'services/review_service.dart';
 import 'stores/active_workout_store.dart';
 import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
-
-// DEBUG FLAG: Set to true to always show onboarding flow
-const bool kForceShowOnboarding = true;
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +52,8 @@ void main() async {
   await WorkoutService.init();
   await SplitService.init();
   await ClassService.init();
+  await ReviewService.init();
+  ReviewService.trackAppOpen();
   
   final nutritionService = NutritionService();
   await nutritionService.initialize();
@@ -141,20 +140,12 @@ class AppInitializer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // DEBUG: Force show onboarding flow
-    if (kForceShowOnboarding) {
-      return const LandingPage();
-    }
-    
-    // Check if user has paid subscription
     final hasPaid = UserService.hasPaidSubscription();
-    
-    // If user has paid, go straight to main navigation
+
     if (hasPaid) {
       return const MainNavigationScreen();
     }
-    
-    // Otherwise show landing page for new users
+
     return const LandingPage();
   }
 }

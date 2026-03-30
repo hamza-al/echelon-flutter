@@ -32,6 +32,7 @@ dependencies:
   path_provider: ^2.1.5
   cupertino_native: ^0.1.1
   flutter_svg: ^2.2.4
+  in_app_review: ^2.0.11
 
 dev_dependencies:
   flutter_test:
@@ -49,5 +50,5 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/logo-echelon.png"
+  image_path: "assets/new-icon.png"
   remove_alpha_ios: true

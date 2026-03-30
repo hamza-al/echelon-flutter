@@ -8,6 +8,7 @@ import '../services/split_service.dart';
 import 'onboarding_processing_screen.dart';
 import 'voice_demo_step.dart';
 import 'paywall_screen.dart';
+import '../services/review_service.dart';
 
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
@@ -371,6 +372,8 @@ class _OnboardingFlowState extends State<OnboardingFlow>
         : WorkoutSplit.pushPullLegs();
     final trainingDays =
         splitObj.dayNames.where((d) => d != 'Rest').length;
+
+    ReviewService.promptAfterOnboarding();
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
