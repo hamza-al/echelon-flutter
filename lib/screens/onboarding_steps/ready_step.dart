@@ -14,7 +14,7 @@ class ReadyStep extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const PulsingParticleSphere(
+          PulsingParticleSphere(
             size: 140,
             primaryColor: AppColors.primary,
             secondaryColor: AppColors.primaryLight,

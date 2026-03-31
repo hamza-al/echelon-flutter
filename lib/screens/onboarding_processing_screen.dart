@@ -127,7 +127,7 @@ class _OnboardingProcessingScreenState
                   fontSize: 26,
                   fontWeight: FontWeight.w500,
                   letterSpacing: -0.5,
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppColors.overlay.withValues(alpha: 0.9),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -142,7 +142,7 @@ class _OnboardingProcessingScreenState
                   _phases[_currentPhase],
                   style: AppStyles.mainText().copyWith(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.overlay.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -159,7 +159,7 @@ class _OnboardingProcessingScreenState
                     'Personalized to your body, your goals, and how you like to train.',
                     style: AppStyles.mainText().copyWith(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppColors.overlay.withValues(alpha: 0.35),
                       height: 1.4,
                     ),
                     textAlign: TextAlign.center,
@@ -183,10 +183,10 @@ class _OnboardingProcessingScreenState
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AppColors.overlay.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
+                        color: AppColors.overlay.withValues(alpha: 0.08),
                         width: 0.5,
                       ),
                     ),
@@ -196,7 +196,7 @@ class _OnboardingProcessingScreenState
                         style: AppStyles.mainText().copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: AppColors.overlay.withValues(alpha: 0.85),
                         ),
                       ),
                     ),
@@ -267,7 +267,7 @@ class _OnboardingProcessingScreenState
                   ? Icon(
                       Icons.check_rounded,
                       key: const ValueKey('done'),
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: AppColors.overlay.withValues(alpha: 0.3),
                       size: 16,
                     )
                   : isActive
@@ -277,7 +277,7 @@ class _OnboardingProcessingScreenState
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.5,
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: AppColors.overlay.withValues(alpha: 0.5),
                           ),
                         )
                       : SizedBox(
@@ -287,7 +287,7 @@ class _OnboardingProcessingScreenState
                           child: Icon(
                             Icons.circle_outlined,
                             size: 16,
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: AppColors.overlay.withValues(alpha: 0.1),
                           ),
                         ),
             ),
@@ -298,10 +298,10 @@ class _OnboardingProcessingScreenState
                 fontSize: 14,
                 fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                 color: isDone
-                    ? Colors.white.withValues(alpha: 0.2)
+                    ? AppColors.overlay.withValues(alpha: 0.2)
                     : isActive
-                        ? Colors.white.withValues(alpha: 0.6)
-                        : Colors.white.withValues(alpha: 0.15),
+                        ? AppColors.overlay.withValues(alpha: 0.6)
+                        : AppColors.overlay.withValues(alpha: 0.15),
               ),
             ),
           ],
@@ -385,7 +385,7 @@ class _OnboardingProcessingScreenState
                                     ),
                                     decoration: BoxDecoration(
                                       color: isRest
-                                          ? Colors.white.withValues(alpha: 0.02)
+                                          ? AppColors.overlay.withValues(alpha: 0.02)
                                           : AppColors.primaryLight
                                               .withValues(alpha: 0.10),
                                       borderRadius: BorderRadius.circular(10),
@@ -430,14 +430,14 @@ class _OnboardingProcessingScreenState
                             style: AppStyles.mainText().copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: AppColors.overlay.withValues(alpha: 0.5),
                             ),
                           ),
                           Text(
                             '${widget.trainingDays} days/week',
                             style: AppStyles.mainText().copyWith(
                               fontSize: 13,
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: AppColors.overlay.withValues(alpha: 0.25),
                             ),
                           ),
                         ],
@@ -462,7 +462,7 @@ class _OnboardingProcessingScreenState
                             style: AppStyles.mainText().copyWith(
                               fontSize: 28,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.85),
+                              color: AppColors.overlay.withValues(alpha: 0.85),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -470,7 +470,7 @@ class _OnboardingProcessingScreenState
                             'cal/day',
                             style: AppStyles.mainText().copyWith(
                               fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: AppColors.overlay.withValues(alpha: 0.3),
                             ),
                           ),
                           const Spacer(),
@@ -528,10 +528,10 @@ class _OnboardingProcessingScreenState
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: AppColors.overlay.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: AppColors.overlay.withValues(alpha: 0.08),
                             width: 0.5,
                           ),
                         ),
@@ -540,7 +540,7 @@ class _OnboardingProcessingScreenState
                           style: AppStyles.mainText().copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppColors.overlay.withValues(alpha: 0.6),
                           ),
                         ),
                       );
@@ -599,10 +599,10 @@ class _OnboardingProcessingScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.overlay.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -615,7 +615,7 @@ class _OnboardingProcessingScreenState
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
-              color: Colors.white.withValues(alpha: 0.2),
+              color: AppColors.overlay.withValues(alpha: 0.2),
             ),
           ),
           const SizedBox(height: 14),
@@ -630,7 +630,7 @@ class _OnboardingProcessingScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: AppColors.overlay.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -640,7 +640,7 @@ class _OnboardingProcessingScreenState
               style: AppStyles.mainText().copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: AppColors.overlay.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 2),
@@ -648,7 +648,7 @@ class _OnboardingProcessingScreenState
               label,
               style: AppStyles.mainText().copyWith(
                 fontSize: 11,
-                color: Colors.white.withValues(alpha: 0.25),
+                color: AppColors.overlay.withValues(alpha: 0.25),
               ),
             ),
           ],
@@ -671,7 +671,7 @@ class _OnboardingProcessingScreenState
             text,
             style: AppStyles.mainText().copyWith(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.45),
+              color: AppColors.overlay.withValues(alpha: 0.45),
               height: 1.3,
             ),
           ),
@@ -700,14 +700,14 @@ class _ProgressRingPainter extends CustomPainter {
     final bgPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = Colors.white.withValues(alpha: 0.04);
+      ..color = AppColors.overlay.withValues(alpha: 0.04);
     canvas.drawCircle(center, radius, bgPaint);
 
     final arcPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round
-      ..color = Colors.white.withValues(alpha: 0.2);
+      ..color = AppColors.overlay.withValues(alpha: 0.2);
 
     final sweep = progress * 2 * pi;
     canvas.drawArc(

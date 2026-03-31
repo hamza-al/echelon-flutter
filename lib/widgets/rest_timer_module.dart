@@ -97,7 +97,7 @@ class _RestTimerModuleState extends State<RestTimerModule>
             fontSize: 10,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.5,
-            color: Colors.white.withValues(alpha: 0.25),
+            color: AppColors.overlay.withValues(alpha: 0.25),
           ),
         ),
         const SizedBox(height: 12),
@@ -156,7 +156,7 @@ class _RestTimerModuleState extends State<RestTimerModule>
             style: AppStyles.mainText().copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.25),
+              color: AppColors.overlay.withValues(alpha: 0.25),
             ),
           ),
         ),
@@ -178,7 +178,7 @@ class _RingPainter extends CustomPainter {
     const strokeWidth = 3.0;
 
     final bgPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = AppColors.overlay.withValues(alpha: 0.06)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
 
@@ -187,7 +187,7 @@ class _RingPainter extends CustomPainter {
     final fgPaint = Paint()
       ..color = isAlmostDone
           ? const Color(0xFFFF6B6B).withValues(alpha: 0.8)
-          : Colors.white.withValues(alpha: 0.5)
+          : AppColors.overlay.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;

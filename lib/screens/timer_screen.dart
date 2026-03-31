@@ -178,8 +178,8 @@ class _TimerScreenState extends State<TimerScreen> {
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
                   color: isDone
-                      ? Colors.white.withValues(alpha: 0.4)
-                      : Colors.white.withValues(alpha: 0.25),
+                      ? AppColors.overlay.withValues(alpha: 0.4)
+                      : AppColors.overlay.withValues(alpha: 0.25),
                 ),
               ),
               const SizedBox(height: 20),
@@ -219,7 +219,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.overlay.withValues(alpha: 0.25),
                     ),
                   ),
                 ),
@@ -250,7 +250,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.overlay.withValues(alpha: 0.2),
                 ),
               ),
               const SizedBox(height: 20),
@@ -267,7 +267,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         fontSize: 48,
                         fontWeight: FontWeight.w200,
                         letterSpacing: -1,
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: AppColors.overlay.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -281,7 +281,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 'Quick start',
                 style: AppStyles.mainText().copyWith(
                   fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: AppColors.overlay.withValues(alpha: 0.2),
                 ),
               ),
               const SizedBox(height: 12),
@@ -306,10 +306,10 @@ class _TimerScreenState extends State<TimerScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
+              color: AppColors.overlay.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppColors.overlay.withValues(alpha: 0.08),
                 width: 0.5,
               ),
             ),
@@ -418,10 +418,10 @@ class _TimerScreenState extends State<TimerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.overlay.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.overlay.withValues(alpha: 0.08),
           width: 0.5,
         ),
       ),
@@ -447,7 +447,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   style: AppStyles.mainText().copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.overlay.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -455,7 +455,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   '${store.workoutElapsed} · ${store.setsLogged} sets',
                   style: AppStyles.mainText().copyWith(
                     fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.overlay.withValues(alpha: 0.3),
                   ),
                 ),
               ],
@@ -490,13 +490,13 @@ class _TimerScreenState extends State<TimerScreen> {
                   const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : Colors.white.withValues(alpha: 0.04),
+                    ? AppColors.overlay.withValues(alpha: 0.12)
+                    : AppColors.overlay.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.20)
-                      : Colors.white.withValues(alpha: 0.08),
+                      ? AppColors.overlay.withValues(alpha: 0.20)
+                      : AppColors.overlay.withValues(alpha: 0.08),
                   width: 0.5,
                 ),
               ),
@@ -524,15 +524,15 @@ class _TimerScreenState extends State<TimerScreen> {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: small ? 0.06 : 0.10),
+          color: AppColors.overlay.withValues(alpha: small ? 0.06 : 0.10),
           border: Border.all(
-            color: Colors.white.withValues(alpha: small ? 0.10 : 0.15),
+            color: AppColors.overlay.withValues(alpha: small ? 0.10 : 0.15),
             width: 0.5,
           ),
         ),
         child: Icon(
           icon,
-          color: Colors.white.withValues(alpha: small ? 0.6 : 1.0),
+          color: AppColors.overlay.withValues(alpha: small ? 0.6 : 1.0),
           size: small ? 22.0 : 28.0,
         ),
       ),
@@ -558,7 +558,7 @@ class _RingPainter extends CustomPainter {
     const strokeWidth = 8.0;
 
     final bgPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = AppColors.overlay.withValues(alpha: 0.06)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -569,8 +569,8 @@ class _RingPainter extends CustomPainter {
         ..color = isAlmostDone
             ? const Color(0xFFFF6B6B).withValues(alpha: 0.8)
             : isDone
-                ? Colors.white.withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.8)
+                ? AppColors.overlay.withValues(alpha: 0.5)
+                : AppColors.overlay.withValues(alpha: 0.8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round;

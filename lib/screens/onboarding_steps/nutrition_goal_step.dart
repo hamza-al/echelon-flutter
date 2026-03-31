@@ -137,11 +137,11 @@ class _NutritionGoalStepState extends State<NutritionGoalStep> {
                               child: Container(
                                 width: 22,
                                 height: 22,
-                                decoration: const BoxDecoration(
+                                decoration:  BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: AppColors.textPrimary,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.check_rounded,
                                   size: 14,
                                   color: AppColors.background,
@@ -183,7 +183,7 @@ class _NutritionGoalStepState extends State<NutritionGoalStep> {
                                   shape: BoxShape.circle,
                                   color: AppColors.surfaceLight,
                                 ),
-                                child: const Icon(
+                                child:  Icon(
                                   Icons.remove_rounded,
                                   color: AppColors.textSecondary,
                                   size: 18,
@@ -208,7 +208,7 @@ class _NutritionGoalStepState extends State<NutritionGoalStep> {
                                   shape: BoxShape.circle,
                                   color: AppColors.surfaceLight,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.add_rounded,
                                   color: AppColors.textSecondary,
                                   size: 18,

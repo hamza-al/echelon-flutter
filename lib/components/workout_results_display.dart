@@ -23,10 +23,10 @@ class WorkoutResultsDisplay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.overlay.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -39,7 +39,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.5,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: AppColors.overlay.withValues(alpha: 0.3),
             ),
           ),
           const SizedBox(height: 14),
@@ -52,10 +52,10 @@ class WorkoutResultsDisplay extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
+                  color: AppColors.overlay.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: AppColors.overlay.withValues(alpha: 0.06),
                     width: 0.5,
                   ),
                 ),
@@ -68,7 +68,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1.0,
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: AppColors.overlay.withValues(alpha: 0.35),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -92,7 +92,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
-                                color: Colors.white.withValues(alpha: 0.35),
+                                color: AppColors.overlay.withValues(alpha: 0.35),
                               ),
                             ),
                             Text(
@@ -100,7 +100,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                               style: AppStyles.mainText().copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.25),
+                                color: AppColors.overlay.withValues(alpha: 0.25),
                               ),
                             ),
                           ],

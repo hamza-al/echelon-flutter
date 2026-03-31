@@ -27,6 +27,7 @@ import 'services/split_service.dart';
 import 'services/class_service.dart';
 import 'services/review_service.dart';
 import 'services/notification_service.dart';
+import 'services/sleep_service.dart';
 import 'stores/active_workout_store.dart';
 import 'stores/coach_chat_store.dart';
 import 'stores/nutrition_store.dart';
@@ -57,6 +58,7 @@ void main() async {
   await ClassService.init();
   await ReviewService.init();
   ReviewService.trackAppOpen();
+  await SleepService.init();
   await NotificationService.init();
   NotificationService.onNotificationTap = (payload) {
     if (payload == 'sleep_log') {
@@ -126,29 +128,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        navigatorKey: navigatorKey,
-        debugShowCheckedModeBanner: false,
-        title: 'echelon',
-        theme: ThemeData(
-          scaffoldBackgroundColor: AppColors.background,
-          colorScheme: ColorScheme.dark(
-            surface: AppColors.background,
-            primary: AppColors.textPrimary,
-            onSurface: AppColors.textPrimary,
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppColors.themeNotifier,
+      builder: (context, isDark, _) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          title: 'echelon',
+          theme: ThemeData(
+            scaffoldBackgroundColor: AppColors.background,
+            colorScheme: isDark
+                ? ColorScheme.dark(
+                    surface: AppColors.background,
+                    primary: AppColors.textPrimary,
+                    onSurface: AppColors.textPrimary,
+                  )
+                : ColorScheme.light(
+                    surface: AppColors.background,
+                    primary: AppColors.textPrimary,
+                    onSurface: AppColors.textPrimary,
+                  ),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            splashFactory: NoSplash.splashFactory,
           ),
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          splashFactory: NoSplash.splashFactory,
-        ),
-        home: const AppInitializer(),
-        routes: {
-          '/onboarding': (context) => const OnboardingFlow(),
-          '/nutrition_goal_setup': (context) => const NutritionGoalSetupScreen(),
-          '/home': (context) => const MainNavigationScreen(),
-          '/landing': (context) => const LandingPage(),
-        },
-      );
+          home: const AppInitializer(),
+          routes: {
+            '/onboarding': (context) => const OnboardingFlow(),
+            '/nutrition_goal_setup': (context) => const NutritionGoalSetupScreen(),
+            '/home': (context) => const MainNavigationScreen(),
+            '/landing': (context) => const LandingPage(),
+          },
+        );
+      },
+    );
   }
 }
 

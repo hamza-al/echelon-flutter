@@ -20,7 +20,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.all(8),
                       child: Icon(
                         Icons.arrow_back_ios_rounded,
@@ -100,10 +100,10 @@ class WorkoutDetailScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: AppColors.overlay.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -134,10 +134,10 @@ class WorkoutDetailScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.overlay.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -160,7 +160,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: AppColors.overlay.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -168,7 +168,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: AppColors.overlay.withValues(alpha: 0.4),
                     ),
                   ),
                 ),
@@ -188,7 +188,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.overlay.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(7),
                     ),
                     child: Center(
@@ -197,7 +197,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                         style: AppStyles.mainText().copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: AppColors.overlay.withValues(alpha: 0.5),
                         ),
                       ),
                     ),

@@ -288,11 +288,11 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                     hintText: 'Search exercises...',
                     hintStyle: AppStyles.mainText().copyWith(
                       fontSize: 15,
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: AppColors.overlay.withValues(alpha: 0.2),
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.overlay.withValues(alpha: 0.25),
                       size: 20,
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
@@ -303,31 +303,31 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                             },
                             child: Icon(
                               Icons.close_rounded,
-                              color: Colors.white.withValues(alpha: 0.25),
+                              color: AppColors.overlay.withValues(alpha: 0.25),
                               size: 18,
                             ),
                           )
                         : null,
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.04),
+                    fillColor: AppColors.overlay.withValues(alpha: 0.04),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppColors.overlay.withValues(alpha: 0.06),
                         width: 0.5,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppColors.overlay.withValues(alpha: 0.06),
                         width: 0.5,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: AppColors.overlay.withValues(alpha: 0.15),
                         width: 0.5,
                       ),
                     ),
@@ -348,7 +348,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                           'No exercises found',
                           style: AppStyles.mainText().copyWith(
                             fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: AppColors.overlay.withValues(alpha: 0.25),
                           ),
                         ),
                       )
@@ -371,10 +371,10 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                                 vertical: 14,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.02),
+                                color: AppColors.overlay.withValues(alpha: 0.02),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.04),
+                                  color: AppColors.overlay.withValues(alpha: 0.04),
                                   width: 0.5,
                                 ),
                               ),
@@ -412,7 +412,7 @@ class _ExerciseSelectionScreenState extends State<ExerciseSelectionScreen> {
                                     Icons.chevron_right_rounded,
                                     size: 18,
                                     color:
-                                        Colors.white.withValues(alpha: 0.15),
+                                        AppColors.overlay.withValues(alpha: 0.15),
                                   ),
                                 ],
                               ),

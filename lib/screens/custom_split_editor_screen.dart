@@ -54,9 +54,9 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
           maxChildSize: 0.9,
           builder: (context, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Column(
                 children: [
@@ -164,7 +164,7 @@ class _CustomSplitEditorScreenState extends State<CustomSplitEditorScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: AppColors.accent),
+                    icon: Icon(Icons.arrow_back, color: AppColors.accent),
                     onPressed: () => Navigator.of(context).pop(),
                     padding: EdgeInsets.zero,
                   ),

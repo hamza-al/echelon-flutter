@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   // Profile icon
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.person_outline,
                       color: AppColors.accent,
                       size: 28,
@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: Hero(
                           tag: 'workout_sphere',
-                          child: const PulsingParticleSphere(
+                          child: PulsingParticleSphere(
                             size: 220,
                             primaryColor: AppColors.primary,
                             secondaryColor: AppColors.primaryLight,
@@ -130,10 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
+                            color: AppColors.overlay.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
+                              color: AppColors.overlay.withValues(alpha: 0.12),
                               width: 1,
                             ),
                           ),

@@ -151,7 +151,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       body: SafeArea(
         bottom: false,
         child: _isLoading
-            ? const Center(
+            ?  Center(
                 child: CircularProgressIndicator(
                   color: AppColors.primaryLight,
                 ),
@@ -170,7 +170,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               fontSize: 28,
                               fontWeight: FontWeight.w500,
                               letterSpacing: -0.5,
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: AppColors.overlay.withValues(alpha: 0.9),
                               height: 1.2,
                             ),
                           ),
@@ -179,7 +179,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             'Your plan, your coach, and your nutrition — all in one place.',
                             style: AppStyles.mainText().copyWith(
                               fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.3),
+                              color: AppColors.overlay.withValues(alpha: 0.3),
                               height: 1.45,
                             ),
                           ),
@@ -195,10 +195,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.03),
+                              color: AppColors.overlay.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.06),
+                                color: AppColors.overlay.withValues(alpha: 0.06),
                                 width: 0.5,
                               ),
                             ),
@@ -226,7 +226,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                       fontSize: 12,
                                       fontStyle: FontStyle.italic,
                                       color:
-                                          Colors.white.withValues(alpha: 0.3),
+                                          AppColors.overlay.withValues(alpha: 0.3),
                                       height: 1.3,
                                     ),
                                   ),
@@ -255,12 +255,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                   const EdgeInsets.symmetric(vertical: 16),
                               decoration: BoxDecoration(
                                 color: _isPurchasing
-                                    ? Colors.white.withValues(alpha: 0.04)
-                                    : Colors.white.withValues(alpha: 0.10),
+                                    ? AppColors.overlay.withValues(alpha: 0.04)
+                                    : AppColors.overlay.withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(
                                   color:
-                                      Colors.white.withValues(alpha: 0.08),
+                                      AppColors.overlay.withValues(alpha: 0.08),
                                   width: 0.5,
                                 ),
                               ),
@@ -297,7 +297,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               style: AppStyles.mainText().copyWith(
                                 fontSize: 12,
                                 color:
-                                    Colors.white.withValues(alpha: 0.2),
+                                    AppColors.overlay.withValues(alpha: 0.2),
                               ),
                             ),
                           ),
@@ -373,13 +373,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: AppColors.overlay.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   f.$1,
                   size: 16,
-                  color: Colors.white.withValues(alpha: 0.35),
+                  color: AppColors.overlay.withValues(alpha: 0.35),
                 ),
               ),
               const SizedBox(width: 14),
@@ -392,7 +392,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       style: AppStyles.mainText().copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.overlay.withValues(alpha: 0.8),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -400,7 +400,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       f.$3,
                       style: AppStyles.mainText().copyWith(
                         fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: AppColors.overlay.withValues(alpha: 0.3),
                         height: 1.35,
                       ),
                     ),
@@ -488,13 +488,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.02),
+              ? AppColors.overlay.withValues(alpha: 0.06)
+              : AppColors.overlay.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
                 ? AppColors.primaryLight.withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.06),
+                : AppColors.overlay.withValues(alpha: 0.06),
             width: isSelected ? 1.5 : 0.5,
           ),
         ),
@@ -508,7 +508,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primaryLight.withValues(alpha: 0.6)
-                      : Colors.white.withValues(alpha: 0.15),
+                      : AppColors.overlay.withValues(alpha: 0.15),
                   width: isSelected ? 6 : 1.5,
                 ),
               ),
@@ -525,7 +525,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         style: AppStyles.mainText().copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: AppColors.overlay.withValues(alpha: 0.8),
                         ),
                       ),
                       if (badge.isNotEmpty) ...[
@@ -558,7 +558,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     subtitle,
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: AppColors.overlay.withValues(alpha: 0.3),
                     ),
                   ),
                 ],
@@ -569,7 +569,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               style: AppStyles.mainText().copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: AppColors.overlay.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -587,9 +587,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
           text,
           style: AppStyles.mainText().copyWith(
             fontSize: 11,
-            color: Colors.white.withValues(alpha: 0.2),
+            color: AppColors.overlay.withValues(alpha: 0.2),
             decoration: TextDecoration.underline,
-            decorationColor: Colors.white.withValues(alpha: 0.15),
+            decorationColor: AppColors.overlay.withValues(alpha: 0.15),
           ),
         ),
       ),
@@ -601,7 +601,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
       '·',
       style: AppStyles.mainText().copyWith(
         fontSize: 11,
-        color: Colors.white.withValues(alpha: 0.15),
+        color: AppColors.overlay.withValues(alpha: 0.15),
       ),
     );
   }

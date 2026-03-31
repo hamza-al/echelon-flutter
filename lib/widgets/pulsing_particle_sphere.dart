@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import '../styles.dart';
 
 class PulsingParticleSphere extends StatefulWidget {
   final double size;
@@ -222,8 +223,8 @@ class _AuroraPainter extends CustomPainter {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          Colors.white.withValues(alpha: 0.18),
-          Colors.white.withValues(alpha: 0.04),
+          AppColors.overlay.withValues(alpha: 0.18),
+          AppColors.overlay.withValues(alpha: 0.04),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],
@@ -240,7 +241,7 @@ class _AuroraPainter extends CustomPainter {
     }
 
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = AppColors.overlay.withValues(alpha: 0.06)
       ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.round;
 

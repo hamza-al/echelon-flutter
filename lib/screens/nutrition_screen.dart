@@ -128,8 +128,8 @@ class NutritionScreen extends StatelessWidget {
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: customMode
-                                ? Colors.white.withValues(alpha: 0.12)
-                                : Colors.white.withValues(alpha: 0.05),
+                                ? AppColors.overlay.withValues(alpha: 0.12)
+                                : AppColors.overlay.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -362,10 +362,10 @@ class NutritionScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: AppColors.overlay.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.10),
+                            color: AppColors.overlay.withValues(alpha: 0.10),
                             width: 0.5,
                           ),
                         ),
@@ -375,7 +375,7 @@ class NutritionScreen extends StatelessWidget {
                             Icon(Icons.add_rounded,
                                 size: 20,
                                 color:
-                                    Colors.white.withValues(alpha: 0.7)),
+                                    AppColors.overlay.withValues(alpha: 0.7)),
                             const SizedBox(width: 8),
                             Text(
                               'Log Food',
@@ -383,7 +383,7 @@ class NutritionScreen extends StatelessWidget {
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                                 color:
-                                    Colors.white.withValues(alpha: 0.7),
+                                    AppColors.overlay.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -666,7 +666,7 @@ class _CalorieRingPainter extends CustomPainter {
     final radius = size.width / 2 - 14;
 
     final bgPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
+      ..color = AppColors.overlay.withValues(alpha: 0.06)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
@@ -676,7 +676,7 @@ class _CalorieRingPainter extends CustomPainter {
       final progressPaint = Paint()
         ..color = isOverGoal
             ? const Color(0xFFFF9500)
-            : Colors.white.withValues(alpha: 0.8)
+            : AppColors.overlay.withValues(alpha: 0.8)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 6
         ..strokeCap = StrokeCap.round;
@@ -747,7 +747,7 @@ class _MacroBar extends StatelessWidget {
             child: Stack(
               children: [
                 Container(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                 ),
                 FractionallySizedBox(
                   widthFactor: progress,

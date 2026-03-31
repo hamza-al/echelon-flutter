@@ -222,10 +222,10 @@ class _LandingPageState extends State<LandingPage>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.overlay.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
@@ -242,7 +242,7 @@ class _LandingPageState extends State<LandingPage>
               style: AppStyles.mainText().copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.5),
+                color: AppColors.overlay.withValues(alpha: 0.5),
               ),
             ),
           ],

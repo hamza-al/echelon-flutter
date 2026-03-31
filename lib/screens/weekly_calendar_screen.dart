@@ -47,7 +47,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     const BorderRadius.vertical(top: Radius.circular(20)),
                 border: Border(
                   top: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: AppColors.overlay.withValues(alpha: 0.06),
                     width: 0.5,
                   ),
                 ),
@@ -59,7 +59,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: AppColors.overlay.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -137,13 +137,13 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.02),
+              ? AppColors.overlay.withValues(alpha: 0.06)
+              : AppColors.overlay.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected
-                ? Colors.white.withValues(alpha: 0.15)
-                : Colors.white.withValues(alpha: 0.06),
+                ? AppColors.overlay.withValues(alpha: 0.15)
+                : AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
@@ -160,7 +160,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                       fontWeight: FontWeight.w600,
                       color: isSelected
                           ? AppColors.textPrimary
-                          : Colors.white.withValues(alpha: 0.7),
+                          : AppColors.overlay.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -172,7 +172,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                             .join(' · '),
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppColors.overlay.withValues(alpha: 0.35),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -183,13 +183,13 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             if (isSelected)
               Icon(
                 Icons.check_rounded,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: AppColors.overlay.withValues(alpha: 0.6),
                 size: 20,
               )
             else if (isCustom)
               Icon(
                 Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.overlay.withValues(alpha: 0.2),
                 size: 20,
               ),
           ],
@@ -269,10 +269,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.04),
+                  color: AppColors.overlay.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: AppColors.overlay.withValues(alpha: 0.08),
                     width: 0.5,
                   ),
                 ),
@@ -282,7 +282,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: AppColors.overlay.withValues(alpha: 0.6),
                     ),
                   ),
                 ),
@@ -295,10 +295,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.02),
+                color: AppColors.overlay.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
@@ -310,7 +310,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.overlay.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -318,7 +318,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     _getSplitDescription(_currentSplit.splitType),
                     style: AppStyles.mainText().copyWith(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      color: AppColors.overlay.withValues(alpha: 0.35),
                       height: 1.5,
                     ),
                   ),
@@ -343,13 +343,13 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isToday
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.white.withValues(alpha: 0.02),
+            ? AppColors.overlay.withValues(alpha: 0.08)
+            : AppColors.overlay.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isToday
-              ? Colors.white.withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.06),
+              ? AppColors.overlay.withValues(alpha: 0.15)
+              : AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -366,8 +366,8 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: isToday
-                        ? Colors.white.withValues(alpha: 0.6)
-                        : Colors.white.withValues(alpha: 0.35),
+                        ? AppColors.overlay.withValues(alpha: 0.6)
+                        : AppColors.overlay.withValues(alpha: 0.35),
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -378,7 +378,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     fontWeight: FontWeight.w700,
                     color: isToday
                         ? AppColors.textPrimary
-                        : Colors.white.withValues(alpha: 0.5),
+                        : AppColors.overlay.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -395,7 +395,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AppColors.overlay.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -404,7 +404,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.8,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: AppColors.overlay.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -414,10 +414,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     fontSize: 14,
                     fontWeight: isRest ? FontWeight.w400 : FontWeight.w600,
                     color: isRest
-                        ? Colors.white.withValues(alpha: 0.2)
+                        ? AppColors.overlay.withValues(alpha: 0.2)
                         : isToday
                             ? AppColors.textPrimary
-                            : Colors.white.withValues(alpha: 0.6),
+                            : AppColors.overlay.withValues(alpha: 0.6),
                   ),
                 ),
               ],

@@ -193,7 +193,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
                         padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.arrow_back_ios_rounded,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: AppColors.overlay.withValues(alpha: 0.6),
                           size: 20,
                         ),
                       ),
@@ -278,7 +278,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
       style: AppStyles.mainText().copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Colors.white.withValues(alpha: 0.4),
+        color: AppColors.overlay.withValues(alpha: 0.4),
       ),
     );
   }
@@ -304,13 +304,13 @@ class _LogClassScreenState extends State<LogClassScreen> {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : Colors.white.withValues(alpha: 0.03),
+                  ? AppColors.overlay.withValues(alpha: 0.10)
+                  : AppColors.overlay.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.20)
-                    : Colors.white.withValues(alpha: 0.06),
+                    ? AppColors.overlay.withValues(alpha: 0.20)
+                    : AppColors.overlay.withValues(alpha: 0.06),
                 width: 0.5,
               ),
             ),
@@ -321,8 +321,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
                   option.icon,
                   size: 22,
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.85)
-                      : Colors.white.withValues(alpha: 0.35),
+                      ? AppColors.overlay.withValues(alpha: 0.85)
+                      : AppColors.overlay.withValues(alpha: 0.35),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -331,8 +331,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected
-                        ? Colors.white.withValues(alpha: 0.85)
-                        : Colors.white.withValues(alpha: 0.4),
+                        ? AppColors.overlay.withValues(alpha: 0.85)
+                        : AppColors.overlay.withValues(alpha: 0.4),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -363,13 +363,13 @@ class _LogClassScreenState extends State<LogClassScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.12)
-                  : Colors.white.withValues(alpha: 0.03),
+                  ? AppColors.overlay.withValues(alpha: 0.12)
+                  : AppColors.overlay.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.22)
-                    : Colors.white.withValues(alpha: 0.06),
+                    ? AppColors.overlay.withValues(alpha: 0.22)
+                    : AppColors.overlay.withValues(alpha: 0.06),
                 width: 0.5,
               ),
             ),
@@ -379,8 +379,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.85)
-                    : Colors.white.withValues(alpha: 0.4),
+                    ? AppColors.overlay.withValues(alpha: 0.85)
+                    : AppColors.overlay.withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -408,13 +408,13 @@ class _LogClassScreenState extends State<LogClassScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.white.withValues(alpha: 0.12)
-                      : Colors.white.withValues(alpha: 0.03),
+                      ? AppColors.overlay.withValues(alpha: 0.12)
+                      : AppColors.overlay.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isSelected
-                        ? Colors.white.withValues(alpha: 0.22)
-                        : Colors.white.withValues(alpha: 0.06),
+                        ? AppColors.overlay.withValues(alpha: 0.22)
+                        : AppColors.overlay.withValues(alpha: 0.06),
                     width: 0.5,
                   ),
                 ),
@@ -425,8 +425,8 @@ class _LogClassScreenState extends State<LogClassScreen> {
                       fontSize: 11,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                       color: isSelected
-                          ? Colors.white.withValues(alpha: 0.85)
-                          : Colors.white.withValues(alpha: 0.4),
+                          ? AppColors.overlay.withValues(alpha: 0.85)
+                          : AppColors.overlay.withValues(alpha: 0.4),
                     ),
                     maxLines: 1,
                   ),
@@ -447,10 +447,10 @@ class _LogClassScreenState extends State<LogClassScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: AppColors.overlay.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: AppColors.overlay.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -463,7 +463,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
                   style: AppStyles.mainText().copyWith(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: AppColors.overlay.withValues(alpha: 0.7),
                   ),
                 ),
                 TextSpan(
@@ -471,7 +471,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
                   style: AppStyles.mainText().copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: AppColors.overlay.withValues(alpha: 0.3),
                   ),
                 ),
               ],
@@ -501,28 +501,28 @@ class _LogClassScreenState extends State<LogClassScreen> {
         hintText: hint,
         hintStyle: AppStyles.mainText().copyWith(
           fontSize: 15,
-          color: Colors.white.withValues(alpha: 0.15),
+          color: AppColors.overlay.withValues(alpha: 0.15),
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.04),
+        fillColor: AppColors.overlay.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: AppColors.overlay.withValues(alpha: 0.15),
             width: 0.5,
           ),
         ),
@@ -541,10 +541,10 @@ class _LogClassScreenState extends State<LogClassScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.10),
+            color: AppColors.overlay.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: AppColors.overlay.withValues(alpha: 0.08),
               width: 0.5,
             ),
           ),
@@ -554,7 +554,7 @@ class _LogClassScreenState extends State<LogClassScreen> {
               style: AppStyles.mainText().copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.85),
+                color: AppColors.overlay.withValues(alpha: 0.85),
               ),
             ),
           ),

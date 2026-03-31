@@ -98,11 +98,11 @@ class SplitSelectionStep extends StatelessWidget {
                         child: Container(
                           width: 22,
                           height: 22,
-                          decoration: const BoxDecoration(
+                          decoration:  BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColors.textPrimary,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.check_rounded,
                             size: 14,
                             color: AppColors.background,

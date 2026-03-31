@@ -742,12 +742,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: AppColors.overlay.withValues(alpha: 0.06),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.close_rounded,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: AppColors.overlay.withValues(alpha: 0.5),
                           size: 18,
                         ),
                       ),
@@ -775,10 +775,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: AppColors.overlay.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -808,7 +808,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withValues(alpha: 0.10)
+              ? AppColors.overlay.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
@@ -819,8 +819,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
               icon,
               size: 16,
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.3),
+                  ? AppColors.overlay.withValues(alpha: 0.8)
+                  : AppColors.overlay.withValues(alpha: 0.3),
             ),
             const SizedBox(width: 6),
             Text(
@@ -829,8 +829,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : Colors.white.withValues(alpha: 0.3),
+                    ? AppColors.overlay.withValues(alpha: 0.8)
+                    : AppColors.overlay.withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -851,7 +851,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
             style: AppStyles.mainText().copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.45),
+              color: AppColors.overlay.withValues(alpha: 0.45),
             ),
           ),
           
@@ -930,7 +930,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                         : '',
             style: AppStyles.mainText().copyWith(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.25),
+              color: AppColors.overlay.withValues(alpha: 0.25),
             ),
           ),
         ],
@@ -943,28 +943,28 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       hintText: hint,
       hintStyle: AppStyles.mainText().copyWith(
         fontSize: 15,
-        color: Colors.white.withValues(alpha: 0.2),
+        color: AppColors.overlay.withValues(alpha: 0.2),
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.04),
+      fillColor: AppColors.overlay.withValues(alpha: 0.04),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: AppColors.overlay.withValues(alpha: 0.15),
           width: 0.5,
         ),
       ),
@@ -997,7 +997,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
             style: AppStyles.mainText().copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: AppColors.overlay.withValues(alpha: 0.4),
             ),
           ),
           const SizedBox(height: 8),
@@ -1012,7 +1012,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                   suffix: Icon(
                     Icons.chevron_right_rounded,
                     size: 18,
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.overlay.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -1032,7 +1032,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                       style: AppStyles.mainText().copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: AppColors.overlay.withValues(alpha: 0.4),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1057,7 +1057,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                       style: AppStyles.mainText().copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: AppColors.overlay.withValues(alpha: 0.4),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1083,10 +1083,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.10),
+                color: AppColors.overlay.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.10),
+                  color: AppColors.overlay.withValues(alpha: 0.10),
                   width: 0.5,
                 ),
               ),
@@ -1096,7 +1096,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
                   style: AppStyles.mainText().copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.overlay.withValues(alpha: 0.8),
                   ),
                 ),
               ),

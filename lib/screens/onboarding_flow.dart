@@ -497,9 +497,9 @@ class _OnboardingFlowState extends State<OnboardingFlow>
         child: LinearProgressIndicator(
           value: progress,
           minHeight: 3,
-          backgroundColor: Colors.white.withValues(alpha: 0.06),
+          backgroundColor: AppColors.overlay.withValues(alpha: 0.06),
           valueColor: AlwaysStoppedAnimation<Color>(
-            Colors.white.withValues(alpha: 0.25),
+            AppColors.overlay.withValues(alpha: 0.25),
           ),
         ),
       ),
@@ -520,12 +520,12 @@ class _OnboardingFlowState extends State<OnboardingFlow>
           decoration: BoxDecoration(
             color: isCoach
                 ? Colors.transparent
-                : Colors.white.withValues(alpha: 0.08),
+                : AppColors.overlay.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
             border: isCoach
                 ? null
                 : Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: AppColors.overlay.withValues(alpha: 0.08),
                     width: 0.5,
                   ),
           ),
@@ -535,7 +535,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               fontSize: isCoach ? 20 : 16,
               fontWeight: isCoach ? FontWeight.w500 : FontWeight.w500,
               color: isCoach
-                  ? Colors.white.withValues(alpha: 0.5)
+                  ? AppColors.overlay.withValues(alpha: 0.5)
                   : AppColors.textPrimary,
               height: 1.4,
             ),
@@ -555,7 +555,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
           style: AppStyles.mainText().copyWith(
             fontSize: 20,
             fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.85),
+            color: AppColors.overlay.withValues(alpha: 0.85),
             height: 1.4,
           ),
         ),
@@ -643,28 +643,28 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               hintText: hint,
               hintStyle: AppStyles.mainText().copyWith(
                 fontSize: 16,
-                color: Colors.white.withValues(alpha: 0.15),
+                color: AppColors.overlay.withValues(alpha: 0.15),
               ),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.04),
+              fillColor: AppColors.overlay.withValues(alpha: 0.04),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.overlay.withValues(alpha: 0.15),
                   width: 0.5,
                 ),
               ),
@@ -681,12 +681,12 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.10),
+              color: AppColors.overlay.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.arrow_forward_rounded,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: AppColors.overlay.withValues(alpha: 0.6),
               size: 20,
             ),
           ),
@@ -716,10 +716,10 @@ class _OnboardingFlowState extends State<OnboardingFlow>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: muted ? 0.03 : 0.06),
+          color: AppColors.overlay.withValues(alpha: muted ? 0.03 : 0.06),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: AppColors.overlay.withValues(alpha: 0.08),
             width: 0.5,
           ),
         ),
@@ -773,7 +773,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.10),
+                  color: AppColors.overlay.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -782,7 +782,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     style: AppStyles.mainText().copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: AppColors.overlay.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -811,11 +811,11 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             width: 44,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.overlay.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(Icons.add_rounded,
-                size: 18, color: Colors.white.withValues(alpha: 0.4)),
+                size: 18, color: AppColors.overlay.withValues(alpha: 0.4)),
           ),
         ),
         const SizedBox(height: 8),
@@ -830,7 +830,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
           label,
           style: AppStyles.mainText().copyWith(
             fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: AppColors.overlay.withValues(alpha: 0.3),
           ),
         ),
         const SizedBox(height: 8),
@@ -842,11 +842,11 @@ class _OnboardingFlowState extends State<OnboardingFlow>
             width: 44,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.overlay.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(Icons.remove_rounded,
-                size: 18, color: Colors.white.withValues(alpha: 0.4)),
+                size: 18, color: AppColors.overlay.withValues(alpha: 0.4)),
           ),
         ),
       ],
@@ -880,13 +880,13 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white.withValues(alpha: 0.03),
+                          ? AppColors.overlay.withValues(alpha: 0.12)
+                          : AppColors.overlay.withValues(alpha: 0.03),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected
-                            ? Colors.white.withValues(alpha: 0.22)
-                            : Colors.white.withValues(alpha: 0.06),
+                            ? AppColors.overlay.withValues(alpha: 0.22)
+                            : AppColors.overlay.withValues(alpha: 0.06),
                         width: 0.5,
                       ),
                     ),
@@ -897,8 +897,8 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w400,
                         color: isSelected
-                            ? Colors.white.withValues(alpha: 0.85)
-                            : Colors.white.withValues(alpha: 0.4),
+                            ? AppColors.overlay.withValues(alpha: 0.85)
+                            : AppColors.overlay.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -920,7 +920,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
+                    color: AppColors.overlay.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -929,7 +929,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                       style: AppStyles.mainText().copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.overlay.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -962,10 +962,10 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: AppColors.overlay.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
@@ -977,7 +977,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     style: AppStyles.mainText().copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: AppColors.overlay.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -985,7 +985,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     desc[goal]!,
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.overlay.withValues(alpha: 0.25),
                     ),
                   ),
                 ],
@@ -1013,10 +1013,10 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: AppColors.overlay.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
@@ -1028,7 +1028,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     style: AppStyles.mainText().copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: AppColors.overlay.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -1036,7 +1036,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     split.dayNames.where((d) => d != 'Rest').join(' · '),
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.overlay.withValues(alpha: 0.25),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1071,10 +1071,10 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: AppColors.overlay.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
@@ -1086,14 +1086,14 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                     style: AppStyles.mainText().copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: AppColors.overlay.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
                     entry.value,
                     style: AppStyles.mainText().copyWith(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: AppColors.overlay.withValues(alpha: 0.25),
                     ),
                   ),
                 ],
@@ -1141,10 +1141,10 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.03),
+                color: AppColors.overlay.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: AppColors.overlay.withValues(alpha: 0.06),
                   width: 0.5,
                 ),
               ),
@@ -1153,7 +1153,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
                 style: AppStyles.mainText().copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: AppColors.overlay.withValues(alpha: 0.7),
                 ),
               ),
             ),

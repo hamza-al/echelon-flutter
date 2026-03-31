@@ -82,7 +82,7 @@ class _NutritionHistoryScreenState extends State<NutritionHistoryScreen> {
             // History list
             Expanded(
               child: _isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primary,
                       ),
@@ -145,10 +145,10 @@ class _HistoryDayCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
+            color: AppColors.overlay.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: AppColors.overlay.withValues(alpha: 0.08),
               width: 1,
             ),
           ),
@@ -210,7 +210,7 @@ class _HistoryDayCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (nutrition.totalCalories / nutrition.calorieGoal).clamp(0.0, 1.0),
-                  backgroundColor: Colors.white.withValues(alpha: 0.05),
+                  backgroundColor: AppColors.overlay.withValues(alpha: 0.05),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     nutrition.isOverGoal ? Colors.red : AppColors.primary,
                   ),

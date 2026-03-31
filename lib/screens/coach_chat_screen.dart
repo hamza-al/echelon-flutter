@@ -277,15 +277,15 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                                 height: 36,
                                 decoration: BoxDecoration(
                                   color: store.isLoading
-                                      ? Colors.white.withValues(alpha: 0.06)
-                                      : Colors.white.withValues(alpha: 0.12),
+                                      ? AppColors.overlay.withValues(alpha: 0.06)
+                                      : AppColors.overlay.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(18),
                                 ),
                                 child: Icon(
                                   Icons.arrow_upward_rounded,
                                   color: store.isLoading
-                                      ? Colors.white.withValues(alpha: 0.2)
-                                      : Colors.white.withValues(alpha: 0.8),
+                                      ? AppColors.overlay.withValues(alpha: 0.2)
+                                      : AppColors.overlay.withValues(alpha: 0.8),
                                   size: 20,
                                 ),
                               ),
@@ -309,7 +309,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
-        children: const [
+        children:  [
           PulsingParticleSphere(
             size: 40,
             primaryColor: AppColors.primary,
@@ -340,12 +340,12 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
         code: AppStyles.mainText().copyWith(
           fontSize: 14,
           fontFamily: 'monospace',
-          color: Colors.white.withValues(alpha: 0.7),
-          backgroundColor: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.7),
+          backgroundColor: AppColors.overlay.withValues(alpha: 0.06),
         ),
         listBullet: AppStyles.mainText().copyWith(
           fontSize: 15,
-          color: Colors.white.withValues(alpha: 0.5),
+          color: AppColors.overlay.withValues(alpha: 0.5),
         ),
       );
 
@@ -368,10 +368,10 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.overlay.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
+                    color: AppColors.overlay.withValues(alpha: 0.10),
                     width: 0.5,
                   ),
                 ),
@@ -379,7 +379,7 @@ class _CoachChatScreenState extends State<CoachChatScreen> {
                   message.text,
                   style: AppStyles.mainText().copyWith(
                     fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: AppColors.overlay.withValues(alpha: 0.85),
                   ),
                 ),
               ),
@@ -432,10 +432,10 @@ class _GlassInputPainter extends CustomPainter {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.15),
-          Colors.white.withValues(alpha: 0.15),
-          Colors.white.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.15),
+          AppColors.overlay.withValues(alpha: 0.15),
+          AppColors.overlay.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.12, 0.88, 1.0],
       ).createShader(rect);

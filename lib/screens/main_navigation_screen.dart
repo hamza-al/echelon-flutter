@@ -8,6 +8,7 @@ import 'coach_chat_screen.dart';
 import 'timer_screen.dart';
 import '../stores/nutrition_store.dart';
 import '../widgets/pulsing_particle_sphere.dart';
+import '../styles.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialTab;
@@ -202,8 +203,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                           color: const Color(0xFF111111),
                           border: Border.all(
                             color: _currentIndex == 4
-                                ? Colors.white.withValues(alpha: 0.20)
-                                : Colors.white.withValues(alpha: 0.10),
+                                ? AppColors.overlay.withValues(alpha: 0.20)
+                                : AppColors.overlay.withValues(alpha: 0.10),
                             width: 0.5,
                           ),
                         ),
@@ -243,10 +244,10 @@ class _GlassNavPainter extends CustomPainter {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.18),
-          Colors.white.withValues(alpha: 0.18),
-          Colors.white.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.18),
+          AppColors.overlay.withValues(alpha: 0.18),
+          AppColors.overlay.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.15, 0.85, 1.0],
       ).createShader(rect);
@@ -260,10 +261,10 @@ class _GlassNavPainter extends CustomPainter {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.12),
-          Colors.white.withValues(alpha: 0.12),
-          Colors.white.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.0),
+          AppColors.overlay.withValues(alpha: 0.12),
+          AppColors.overlay.withValues(alpha: 0.12),
+          AppColors.overlay.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.2, 0.8, 1.0],
       ).createShader(rect);

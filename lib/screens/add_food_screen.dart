@@ -104,25 +104,25 @@ class _AddFoodScreenState extends State<AddFoodScreen>
         color: AppColors.textMuted,
       ),
       filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.04),
+      fillColor: AppColors.overlay.withValues(alpha: 0.04),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.overlay.withValues(alpha: 0.08),
           width: 0.5,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: AppColors.overlay.withValues(alpha: 0.08),
           width: 0.5,
         ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: Colors.white.withValues(alpha: 0.20),
+          color: AppColors.overlay.withValues(alpha: 0.20),
           width: 0.5,
         ),
       ),
@@ -154,10 +154,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: isLoading ? 0.04 : 0.08),
+          color: AppColors.overlay.withValues(alpha: isLoading ? 0.04 : 0.08),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: AppColors.overlay.withValues(alpha: 0.12),
             width: 0.5,
           ),
         ),
@@ -168,7 +168,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   width: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: AppColors.overlay.withValues(alpha: 0.5),
                   ),
                 )
               : Text(
@@ -176,7 +176,7 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                   style: AppStyles.mainText().copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.overlay.withValues(alpha: 0.8),
                   ),
                 ),
         ),
@@ -328,17 +328,17 @@ class _AddFoodScreenState extends State<AddFoodScreen>
                 child: Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
+                    color: AppColors.overlay.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: AppColors.overlay.withValues(alpha: 0.06),
                       width: 0.5,
                     ),
                   ),
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AppColors.overlay.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     labelColor: Colors.white,
@@ -389,10 +389,10 @@ class _AddFoodScreenState extends State<AddFoodScreen>
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
+                color: AppColors.overlay.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: AppColors.overlay.withValues(alpha: 0.08),
                   width: 0.5,
                 ),
               ),

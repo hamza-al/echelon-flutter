@@ -2,28 +2,54 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Core palette — warm stone tones
-  static const Color background = Color(0xFF0C0A09);
-  static const Color surface = Color(0xFF1C1917);
-  static const Color surfaceLight = Color(0xFF292524);
+  static bool _isDark = true;
+  static bool get isDark => _isDark;
 
-  static const Color textPrimary = Color(0xFFFAFAF9);
-  static const Color textSecondary = Color(0xFFA8A29E);
-  static const Color textMuted = Color(0xFF57534E);
+  static final ValueNotifier<bool> themeNotifier = ValueNotifier(true);
 
-  static const Color border = Color(0xFF292524);
-  static const Color borderSubtle = Color(0xFF1C1917);
-  static const Color divider = Color(0xFF292524);
+  static void setMode({required bool dark}) {
+    _isDark = dark;
+    themeNotifier.value = dark;
+  }
+
+  // Core palette
+  static Color get background =>
+      _isDark ? const Color(0xFF0C0A09) : const Color(0xFFF7F5F3);
+  static Color get surface =>
+      _isDark ? const Color(0xFF1C1917) : const Color(0xFFFFFFFF);
+  static Color get surfaceLight =>
+      _isDark ? const Color(0xFF292524) : const Color(0xFFF0EDEB);
+
+  static Color get textPrimary =>
+      _isDark ? const Color(0xFFFAFAF9) : const Color(0xFF292524);
+  static Color get textSecondary =>
+      _isDark ? const Color(0xFFA8A29E) : const Color(0xFF78716C);
+  static Color get textMuted =>
+      _isDark ? const Color(0xFF57534E) : const Color(0xFFA8A29E);
+
+  static Color get border =>
+      _isDark ? const Color(0xFF292524) : const Color(0xFFD6D3D1);
+  static Color get borderSubtle =>
+      _isDark ? const Color(0xFF1C1917) : const Color(0xFFE7E5E4);
+  static Color get divider =>
+      _isDark ? const Color(0xFF292524) : const Color(0xFFE7E5E4);
 
   // Backward-compatible aliases
-  static const Color accent = textPrimary;
-  static const Color text = textPrimary;
-  static const Color cardBackground = surface;
+  static Color get accent => textPrimary;
+  static Color get text => textPrimary;
+  static Color get cardBackground => surface;
 
   // Brand violet (sphere, special elements)
-  static const Color primary = Color(0xFF7C3AED);
-  static const Color primaryLight = Color(0xFFA78BFA);
-  static const Color primaryDark = Color(0xFF6D28D9);
+  static Color get primary =>
+      _isDark ? const Color(0xFFEDEDED) : const Color(0xFF8B5CF6);
+  static Color get primaryLight =>
+      _isDark ? const Color(0xFFFFFFFF) : const Color(0xFFB197FC);
+  static Color get primaryDark =>
+      _isDark ? const Color(0xFFB8B8C0) : const Color(0xFF7C3AED);
+
+  // Theme-aware overlay (white in dark, warm grey in light)
+  static Color get overlay =>
+      _isDark ? const Color(0xFFFFFFFF) : const Color(0xFF44403C);
 
   // Recording sphere
   static const Color recordingPrimary = Color(0xFFFF8C00);
@@ -37,7 +63,7 @@ class AppStyles {
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w400,
     double letterSpacing = 0,
-    Color color = AppColors.textPrimary,
+    Color? color,
     double? height,
     FontStyle? fontStyle,
   }) {
@@ -45,7 +71,7 @@ class AppStyles {
       fontSize: fontSize,
       fontWeight: fontWeight,
       letterSpacing: letterSpacing,
-      color: color,
+      color: color ?? AppColors.textPrimary,
       height: height,
       fontStyle: fontStyle,
     );

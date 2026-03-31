@@ -39,7 +39,7 @@ class AllExercisesProgressScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.all(8),
                       child: Icon(
                         Icons.arrow_back_ios_rounded,
@@ -149,10 +149,10 @@ class AllExercisesProgressScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: AppColors.overlay.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
@@ -191,7 +191,7 @@ class AllExercisesProgressScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: AppColors.overlay.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -199,7 +199,7 @@ class AllExercisesProgressScreen extends StatelessWidget {
                     style: AppStyles.mainText().copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: AppColors.overlay.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -207,8 +207,8 @@ class AllExercisesProgressScreen extends StatelessWidget {
               Icon(
                 hasUpwardTrend ? Icons.trending_up : Icons.trending_flat,
                 color: hasUpwardTrend
-                    ? Colors.white.withValues(alpha: 0.4)
-                    : Colors.white.withValues(alpha: 0.15),
+                    ? AppColors.overlay.withValues(alpha: 0.4)
+                    : AppColors.overlay.withValues(alpha: 0.15),
                 size: 18,
               ),
             ],
@@ -219,8 +219,8 @@ class AllExercisesProgressScreen extends StatelessWidget {
             child: CustomPaint(
               painter: _ChartPainter(
                 data: weightData.isNotEmpty ? weightData : volumeData,
-                lineColor: Colors.white.withValues(alpha: 0.5),
-                fillColor: Colors.white.withValues(alpha: 0.06),
+                lineColor: AppColors.overlay.withValues(alpha: 0.5),
+                fillColor: AppColors.overlay.withValues(alpha: 0.06),
               ),
               size: const Size(double.infinity, 48),
             ),
@@ -246,7 +246,7 @@ class AllExercisesProgressScreen extends StatelessWidget {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, sc) => Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
@@ -257,7 +257,7 @@ class AllExercisesProgressScreen extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.overlay.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -308,10 +308,10 @@ class AllExercisesProgressScreen extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.03),
+                        color: AppColors.overlay.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: AppColors.overlay.withValues(alpha: 0.06),
                           width: 0.5,
                         ),
                       ),

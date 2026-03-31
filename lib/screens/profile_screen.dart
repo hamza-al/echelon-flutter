@@ -120,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const BorderRadius.vertical(top: Radius.circular(20)),
             border: Border(
               top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.overlay.withValues(alpha: 0.06),
                 width: 0.5,
               ),
             ),
@@ -131,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.overlay.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 50,
                       margin: const EdgeInsets.symmetric(horizontal: 40),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppColors.overlay.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -196,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
+                    color: AppColors.overlay.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -205,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: AppStyles.mainText().copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.overlay.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -233,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const BorderRadius.vertical(top: Radius.circular(20)),
             border: Border(
               top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: AppColors.overlay.withValues(alpha: 0.06),
                 width: 0.5,
               ),
             ),
@@ -244,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.overlay.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -265,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 50,
                       margin: const EdgeInsets.symmetric(horizontal: 40),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
+                        color: AppColors.overlay.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -311,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
+                    color: AppColors.overlay.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -320,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: AppStyles.mainText().copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.overlay.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -434,13 +434,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? Colors.white.withValues(alpha: 0.10)
-                                  : Colors.white.withValues(alpha: 0.03),
+                                  ? AppColors.overlay.withValues(alpha: 0.10)
+                                  : AppColors.overlay.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected
-                                    ? Colors.white.withValues(alpha: 0.20)
-                                    : Colors.white.withValues(alpha: 0.06),
+                                    ? AppColors.overlay.withValues(alpha: 0.20)
+                                    : AppColors.overlay.withValues(alpha: 0.06),
                                 width: 0.5,
                               ),
                             ),
@@ -452,13 +452,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? FontWeight.w600
                                     : FontWeight.w400,
                                 color: isSelected
-                                    ? Colors.white.withValues(alpha: 0.85)
-                                    : Colors.white.withValues(alpha: 0.4),
+                                    ? AppColors.overlay.withValues(alpha: 0.85)
+                                    : AppColors.overlay.withValues(alpha: 0.4),
                               ),
                             ),
                           ),
                         );
                       }).toList(),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    _sectionLabel('Appearance'),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          AppColors.setMode(dark: !AppColors.isDark);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.overlay.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.overlay.withValues(alpha: 0.06),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  AppColors.isDark
+                                      ? Icons.dark_mode_rounded
+                                      : Icons.light_mode_rounded,
+                                  size: 18,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  AppColors.isDark ? 'Dark Mode' : 'Light Mode',
+                                  style: AppStyles.mainText().copyWith(
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              width: 44,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(13),
+                                color: AppColors.isDark
+                                    ? AppColors.overlay.withValues(alpha: 0.15)
+                                    : AppColors.primaryLight
+                                        .withValues(alpha: 0.5),
+                              ),
+                              child: AnimatedAlign(
+                                duration: const Duration(milliseconds: 200),
+                                alignment: AppColors.isDark
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  width: 20,
+                                  height: 20,
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 3),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.isDark
+                                        ? Colors.white
+                                        : AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 40),
@@ -475,10 +553,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.10),
+                    color: AppColors.overlay.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.10),
+                      color: AppColors.overlay.withValues(alpha: 0.10),
                       width: 0.5,
                     ),
                   ),
@@ -488,7 +566,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: AppStyles.mainText().copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: AppColors.overlay.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -507,7 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       style: AppStyles.mainText().copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Colors.white.withValues(alpha: 0.4),
+        color: AppColors.overlay.withValues(alpha: 0.4),
       ),
     );
   }
@@ -522,10 +600,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: AppColors.overlay.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
@@ -538,13 +616,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontSize: 15,
                 color: value != null
                     ? AppColors.textPrimary
-                    : Colors.white.withValues(alpha: 0.2),
+                    : AppColors.overlay.withValues(alpha: 0.2),
               ),
             ),
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: Colors.white.withValues(alpha: 0.2),
+              color: AppColors.overlay.withValues(alpha: 0.2),
             ),
           ],
         ),
@@ -561,13 +639,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.white.withValues(alpha: 0.10)
-              : Colors.white.withValues(alpha: 0.03),
+              ? AppColors.overlay.withValues(alpha: 0.10)
+              : AppColors.overlay.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? Colors.white.withValues(alpha: 0.20)
-                : Colors.white.withValues(alpha: 0.06),
+                ? AppColors.overlay.withValues(alpha: 0.20)
+                : AppColors.overlay.withValues(alpha: 0.06),
             width: 0.5,
           ),
         ),
@@ -578,8 +656,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 14,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.4),
+                  ? AppColors.overlay.withValues(alpha: 0.85)
+                  : AppColors.overlay.withValues(alpha: 0.4),
             ),
           ),
         ),

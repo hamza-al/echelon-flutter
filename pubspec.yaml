@@ -34,6 +34,7 @@ dependencies:
   flutter_svg: ^2.2.4
   in_app_review: ^2.0.11
   flutter_local_notifications: ^21.0.0
+  timezone: any
 
 dev_dependencies:
   flutter_test:
