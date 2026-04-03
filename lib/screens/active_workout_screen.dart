@@ -42,12 +42,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   final List<double> _calibrationSamples = [];
   int _speechConfirmCount = 0;
   static const int _speechConfirmRequired = 2;
-  static const double _speechOffset = 18.0;
-  static const double _silenceOffset = 8.0;
-  static const double _minHysteresis = 10.0;
+  static const double _minHysteresis = 5.0;
   static const Duration _silenceTimeout = Duration(milliseconds: 1500);
+  static const Duration _maxRecordingTimeout = Duration(seconds: 15);
   StreamSubscription<Amplitude>? _amplitudeSubscription;
   Timer? _silenceTimer;
+  Timer? _maxRecordingTimer;
   
   Workout? _currentWorkout;
   // ignore: unused_field
@@ -95,6 +95,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   @override
   void dispose() {
     _silenceTimer?.cancel();
+    _maxRecordingTimer?.cancel();
     _amplitudeSubscription?.cancel();
     _fadeController?.dispose();
     _audioRecorder.dispose();
@@ -163,6 +164,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
 
       _speechDetected = false;
       _silenceTimer?.cancel();
+      _maxRecordingTimer?.cancel();
       
       // Reset adaptive VAD state for fresh calibration
       _noiseFloor = null;
@@ -175,6 +177,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
       _amplitudeSubscription = _audioRecorder
           .onAmplitudeChanged(const Duration(milliseconds: 150))
           .listen(_onAmplitude);
+
+      // Safety net: if speech is never detected, send after max timeout
+      _maxRecordingTimer = Timer(_maxRecordingTimeout, () {
+        debugPrint('[VAD] <<< Max recording timeout — sending regardless');
+        if (mounted && _isListening) {
+          _speechDetected = true;
+          _finishAndSend();
+        }
+      });
       
       if (mounted) {
         setState(() {
@@ -201,16 +212,23 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
         final sorted = List<double>.from(_calibrationSamples)..sort();
         final trimmed = sorted.sublist(0, sorted.length - 1);
         _noiseFloor = trimmed.reduce((a, b) => a + b) / trimmed.length;
-        _speechThreshold = _noiseFloor! + _speechOffset;
-        _silenceThreshold = _noiseFloor! + _silenceOffset;
 
-        // Enforce minimum hysteresis
+        // Adaptive offsets: shrink in loud environments so speech can still be detected
+        // Quiet (floor <= -50): speechOffset=18, silenceOffset=8
+        // Loud  (floor >= -20): speechOffset=8,  silenceOffset=4
+        final loudness = ((_noiseFloor! + 50) / 30).clamp(0.0, 1.0);
+        final speechOffset = 18.0 - (10.0 * loudness);
+        final silenceOffset = 8.0 - (4.0 * loudness);
+
+        _speechThreshold = _noiseFloor! + speechOffset;
+        _silenceThreshold = _noiseFloor! + silenceOffset;
+
         if ((_speechThreshold - _silenceThreshold) < _minHysteresis) {
           _speechThreshold = _silenceThreshold + _minHysteresis;
         }
 
         _isCalibrating = false;
-        debugPrint('[VAD] Calibration done — floor: ${_noiseFloor!.toStringAsFixed(1)}, speechTh: ${_speechThreshold.toStringAsFixed(1)}, silenceTh: ${_silenceThreshold.toStringAsFixed(1)}');
+        debugPrint('[VAD] Calibration done — floor: ${_noiseFloor!.toStringAsFixed(1)}, speechOff: ${speechOffset.toStringAsFixed(1)}, silenceOff: ${silenceOffset.toStringAsFixed(1)}, speechTh: ${_speechThreshold.toStringAsFixed(1)}, silenceTh: ${_silenceThreshold.toStringAsFixed(1)}');
 
         if (mounted) {
           setState(() { _statusText = 'Listening...'; });
@@ -253,6 +271,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   Future<void> _finishAndSend() async {
     _silenceTimer?.cancel();
     _silenceTimer = null;
+    _maxRecordingTimer?.cancel();
+    _maxRecordingTimer = null;
     _amplitudeSubscription?.cancel();
     _amplitudeSubscription = null;
 
@@ -287,6 +307,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> with SingleTi
   Future<void> _stopListening() async {
     _silenceTimer?.cancel();
     _silenceTimer = null;
+    _maxRecordingTimer?.cancel();
+    _maxRecordingTimer = null;
     _amplitudeSubscription?.cancel();
     _amplitudeSubscription = null;
 

@@ -41,11 +41,11 @@ class AppColors {
 
   // Brand violet (sphere, special elements)
   static Color get primary =>
-      _isDark ? const Color(0xFFEDEDED) : const Color(0xFF8B5CF6);
+      _isDark ? const Color(0xFF7C3AED) : const Color(0xFF8B5CF6);
   static Color get primaryLight =>
-      _isDark ? const Color(0xFFFFFFFF) : const Color(0xFFB197FC);
+      _isDark ? const Color(0xFFA78BFA) : const Color(0xFFB197FC);
   static Color get primaryDark =>
-      _isDark ? const Color(0xFFB8B8C0) : const Color(0xFF7C3AED);
+      _isDark ? const Color(0xFF6D28D9) : const Color(0xFF7C3AED);
 
   // Theme-aware overlay (white in dark, warm grey in light)
   static Color get overlay =>
@@ -132,6 +132,49 @@ class AppStyles {
         fontSize: 12,
         fontWeight: FontWeight.w400,
         color: AppColors.textMuted,
+      );
+
+  // ---- Primary marketing CTAs (Let's go, See plans, paywall, etc.) ----
+
+  static BoxDecoration vibrantCtaDecoration({double radius = 14}) {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.primaryLight,
+          AppColors.primary,
+          AppColors.primaryDark,
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ),
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.42),
+          blurRadius: 14,
+          offset: const Offset(0, 5),
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration vibrantCtaDecorationDisabled({double radius = 14}) {
+    return BoxDecoration(
+      color: AppColors.overlay.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: AppColors.overlay.withValues(alpha: 0.08),
+        width: 0.5,
+      ),
+    );
+  }
+
+  static TextStyle vibrantCtaText() => GoogleFonts.dmSans(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+        color: Colors.white,
       );
 
   // ---- Button ----

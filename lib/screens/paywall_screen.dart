@@ -3,6 +3,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../styles.dart';
 import '../services/user_service.dart';
+import '../services/tiktok_tracking_service.dart';
 import 'main_navigation_screen.dart';
 
 class PaywallScreen extends StatefulWidget {
@@ -119,6 +120,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   void _onPurchaseSuccess() async {
+    TikTokTrackingService.instance.trackSubscribe();
     await UserService.updateSubscriptionStatus(true);
 
     if (mounted) {
@@ -253,17 +255,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               width: double.infinity,
                               padding:
                                   const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                color: _isPurchasing
-                                    ? AppColors.overlay.withValues(alpha: 0.04)
-                                    : AppColors.overlay.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color:
-                                      AppColors.overlay.withValues(alpha: 0.08),
-                                  width: 0.5,
-                                ),
-                              ),
+                              decoration: _isPurchasing ||
+                                      _selectedPackage == null
+                                  ? AppStyles.vibrantCtaDecorationDisabled()
+                                  : AppStyles.vibrantCtaDecoration(),
                               child: Center(
                                 child: _isPurchasing
                                     ? SizedBox(
@@ -271,19 +266,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
                                         width: 20,
                                         child: CircularProgressIndicator(
                                           color: Colors.white
-                                              .withValues(alpha: 0.5),
+                                              .withValues(alpha: 0.6),
                                           strokeWidth: 2,
                                         ),
                                       )
                                     : Text(
                                         'Start Training Smarter',
-                                        style:
-                                            AppStyles.mainText().copyWith(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white
-                                              .withValues(alpha: 0.85),
-                                        ),
+                                        style: _selectedPackage == null
+                                            ? AppStyles.mainText().copyWith(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.overlay
+                                                    .withValues(alpha: 0.35),
+                                              )
+                                            : AppStyles.vibrantCtaText(),
                                       ),
                               ),
                             ),

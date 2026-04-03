@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../styles.dart';
 import '../widgets/pulsing_particle_sphere.dart';
 import '../services/auth_service.dart';
+import '../services/tiktok_tracking_service.dart';
 import 'onboarding_flow.dart';
 
 class LandingPage extends StatefulWidget {
@@ -185,6 +186,7 @@ class _LandingPageState extends State<LandingPage>
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () {
+                                TikTokTrackingService.instance.trackStartOnboarding();
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                     builder: (context) =>

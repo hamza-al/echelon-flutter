@@ -22,6 +22,10 @@ PODS:
   - RevenueCat (5.50.0)
   - sign_in_with_apple (0.0.1):
     - Flutter
+  - tiktok_business_sdk (0.0.1):
+    - Flutter
+    - TikTokBusinessSDK (~> 1.5.0)
+  - TikTokBusinessSDK (1.5.1)
   - url_launcher_ios (0.0.1):
     - Flutter
 
@@ -35,12 +39,14 @@ DEPENDENCIES:
   - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
   - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
+  - tiktok_business_sdk (from `.symlinks/plugins/tiktok_business_sdk/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
     - PurchasesHybridCommon
     - RevenueCat
+    - TikTokBusinessSDK
 
 EXTERNAL SOURCES:
   audioplayers_darwin:
@@ -61,6 +67,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/record_ios/ios"
   sign_in_with_apple:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
+  tiktok_business_sdk:
+    :path: ".symlinks/plugins/tiktok_business_sdk/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
@@ -76,6 +84,8 @@ SPEC CHECKSUMS:
   record_ios: f75fa1d57f840012775c0e93a38a7f3ceea1a374
   RevenueCat: a5fcd0a12b5ec9bbddc0cf0dd20c14b7e6213df6
   sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
+  tiktok_business_sdk: 9927d89f41d5d9e82ef52cb8d3589ea84bf2fae2
+  TikTokBusinessSDK: 6b59d8a69ee23fa714831e8c6f47c34831abc60b
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
 
 PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865

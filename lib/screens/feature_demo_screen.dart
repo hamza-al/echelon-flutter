@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
@@ -11,6 +12,15 @@ import '../services/calories_api_service.dart';
 import '../services/auth_service.dart';
 
 enum _DemoPhase { mealInput, mealLoading, mealResult, voiceIdle, voiceRecording, voiceProcessing, done }
+enum _BubbleRole { coach, user }
+
+class _ChatBubble {
+  final _BubbleRole role;
+  final String? text;
+  final Widget? widget;
+  _ChatBubble.text(this.role, this.text) : widget = null;
+  _ChatBubble.widget(this.role, this.widget) : text = null;
+}
 
 class FeatureDemoScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -21,23 +31,51 @@ class FeatureDemoScreen extends StatefulWidget {
   State<FeatureDemoScreen> createState() => _FeatureDemoScreenState();
 }
 
-class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
+class _FeatureDemoScreenState extends State<FeatureDemoScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _foodController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final AudioRecorder _audioRecorder = AudioRecorder();
 
   _DemoPhase _phase = _DemoPhase.mealInput;
-  CaloriesResponse? _caloriesResult;
   List<Map<String, dynamic>> _loggedSets = [];
+
+  final List<_ChatBubble> _messages = [];
+  bool _isTyping = false;
+  String _typedSoFar = '';
+  Timer? _typeTimer;
+  bool _inputReady = false;
+
+  static const double _coachFontSize = 17.0;
 
   @override
   void initState() {
     super.initState();
     _audioRecorder.hasPermission();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      _typeCoachMessage(
+        'Now, on to the features.',
+        onDone: () {
+          if (!mounted) return;
+          _typeCoachMessage(
+            'Let\'s try logging your first meal.',
+            onDone: () {
+              if (!mounted) return;
+              _typeCoachMessage(
+                'Type anything — "2 eggs and toast", "a protein shake"...',
+                unlockInput: true,
+              );
+            },
+          );
+        },
+      );
+    });
   }
 
   @override
   void dispose() {
+    _typeTimer?.cancel();
     _foodController.dispose();
     _scrollController.dispose();
     _audioRecorder.dispose();
@@ -48,12 +86,52 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          _scrollController.position.maxScrollExtent + 80,
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
     });
+  }
+
+  void _typeCoachMessage(
+    String text, {
+    VoidCallback? onDone,
+    bool unlockInput = false,
+  }) {
+    setState(() {
+      _isTyping = true;
+      _inputReady = false;
+      _typedSoFar = '';
+    });
+
+    int charIndex = 0;
+    _typeTimer?.cancel();
+    _typeTimer = Timer.periodic(const Duration(milliseconds: 28), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      if (charIndex < text.length) {
+        charIndex++;
+        setState(() => _typedSoFar = text.substring(0, charIndex));
+        _scrollToBottom();
+      } else {
+        timer.cancel();
+        setState(() {
+          _isTyping = false;
+          _messages.add(_ChatBubble.text(_BubbleRole.coach, text));
+          _typedSoFar = '';
+          if (unlockInput) _inputReady = true;
+        });
+        _scrollToBottom();
+        onDone?.call();
+      }
+    });
+  }
+
+  void _addCoachBubbleWithWidget(Widget widget) {
+    setState(() {
+      _messages.add(_ChatBubble.widget(_BubbleRole.coach, widget));
+    });
+    _scrollToBottom();
   }
 
   Future<void> _submitFood() async {
@@ -61,7 +139,12 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
     if (text.isEmpty) return;
 
     FocusScope.of(context).unfocus();
-    setState(() => _phase = _DemoPhase.mealLoading);
+    setState(() {
+      _messages.add(_ChatBubble.text(_BubbleRole.user, text));
+      _inputReady = false;
+      _phase = _DemoPhase.mealLoading;
+      _isTyping = true;
+    });
     _scrollToBottom();
 
     try {
@@ -70,34 +153,88 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
       final result = await api.getCalories(quantity: '1', foodItem: text);
       if (mounted) {
         setState(() {
-          _caloriesResult = result;
+          _isTyping = false;
           _phase = _DemoPhase.mealResult;
         });
-        _scrollToBottom();
-        await Future.delayed(const Duration(milliseconds: 800));
+        _addCoachBubbleWithWidget(_buildNutritionCard(result));
+        await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) {
-          setState(() => _phase = _DemoPhase.voiceIdle);
-          _scrollToBottom();
+          _typeCoachMessage(
+            'Nice — ${result.calories.round()} calories, ${result.macros.protein.round()}g protein. That\'s all it takes.',
+            onDone: () {
+              if (!mounted) return;
+              _typeCoachMessage(
+                'Now let\'s try logging a set with your voice.',
+                onDone: () {
+                  if (!mounted) return;
+                  _addVoiceExampleHint();
+                  setState(() {
+                    _phase = _DemoPhase.voiceIdle;
+                  });
+                  _scrollToBottom();
+                },
+              );
+            },
+          );
         }
       }
     } catch (_) {
       if (mounted) {
+        final result = CaloriesResponse(
+          itemName: text.toUpperCase(),
+          calories: 350,
+          macros: Macros(protein: 25, carbs: 30, fats: 15),
+        );
         setState(() {
-          _caloriesResult = CaloriesResponse(
-            itemName: text.toUpperCase(),
-            calories: 350,
-            macros: Macros(protein: 25, carbs: 30, fats: 15),
-          );
+          _isTyping = false;
           _phase = _DemoPhase.mealResult;
         });
-        _scrollToBottom();
-        await Future.delayed(const Duration(milliseconds: 800));
+        _addCoachBubbleWithWidget(_buildNutritionCard(result));
+        await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) {
-          setState(() => _phase = _DemoPhase.voiceIdle);
-          _scrollToBottom();
+          _typeCoachMessage(
+            'Nice — ${result.calories.round()} calories, ${result.macros.protein.round()}g protein. That\'s all it takes.',
+            onDone: () {
+              if (!mounted) return;
+              _typeCoachMessage(
+                'Now let\'s try logging a set with your voice.',
+                onDone: () {
+                  if (!mounted) return;
+                  _addVoiceExampleHint();
+                  setState(() {
+                    _phase = _DemoPhase.voiceIdle;
+                  });
+                  _scrollToBottom();
+                },
+              );
+            },
+          );
         }
       }
     }
+  }
+
+  void _addVoiceExampleHint() {
+    setState(() {
+      _messages.add(
+        _ChatBubble.widget(
+          _BubbleRole.coach,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            child: Text(
+              '"3 sets of 10 bench press at 185 pounds"',
+              textAlign: TextAlign.center,
+              style: AppStyles.mainText().copyWith(
+                fontSize: 14,
+                height: 1.4,
+                color: AppColors.primaryLight.withValues(alpha: 0.55),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+    _scrollToBottom();
   }
 
   Future<void> _startRecording() async {
@@ -121,7 +258,10 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
   Future<void> _stopRecording() async {
     try {
       final path = await _audioRecorder.stop();
-      setState(() => _phase = _DemoPhase.voiceProcessing);
+      setState(() {
+        _phase = _DemoPhase.voiceProcessing;
+        _isTyping = true;
+      });
       _scrollToBottom();
 
       if (path != null) {
@@ -156,21 +296,27 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
             .where((cmd) => cmd['type'] == 'log_set')
             .map((cmd) => cmd['payload'] as Map<String, dynamic>)
             .toList();
-
-        if (mounted) {
-          setState(() => _phase = _DemoPhase.done);
-          _scrollToBottom();
-        }
       } else {
         throw Exception('API Error');
       }
     } catch (_) {
+      _loggedSets = [
+        {'exercise': 'bench_press', 'sets': 3, 'reps': 10, 'weight': 185},
+      ];
+    }
+
+    if (mounted) {
+      setState(() => _isTyping = false);
+      if (_loggedSets.isNotEmpty) {
+        _addCoachBubbleWithWidget(
+          WorkoutResultsDisplay(loggedSets: _loggedSets),
+        );
+      }
+      await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) {
-        _loggedSets = [
-          {'exercise': 'bench_press', 'sets': 3, 'reps': 10, 'weight': 185},
-        ];
-        setState(() => _phase = _DemoPhase.done);
-        _scrollToBottom();
+        _typeCoachMessage("Perfect. You're all set.", onDone: () {
+          setState(() => _phase = _DemoPhase.done);
+        });
       }
     }
   }
@@ -196,196 +342,36 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
             Expanded(
               child: GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
-                child: ListView(
+                child: ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
-                  children: [
-                    Text(
-                      'Now, on to the features.',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.overlay.withValues(alpha: 0.9),
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Let\'s try logging your first meal.',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.overlay.withValues(alpha: 0.9),
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Type anything — "2 eggs and toast", "a protein shake"...',
-                      style: AppStyles.mainText().copyWith(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.overlay.withValues(alpha: 0.25),
-                        height: 1.4,
-                      ),
-                    ),
+                  padding: const EdgeInsets.fromLTRB(20, 48, 20, 8),
+                  itemCount: _messages.length
+                      + (_isTyping ? 1 : 0)
+                      + (_phase.index >= _DemoPhase.voiceIdle.index && _phase != _DemoPhase.done ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index < _messages.length) {
+                      return _buildBubble(_messages[index]);
+                    }
 
-                    if (_foodController.text.isNotEmpty &&
-                        _phase != _DemoPhase.mealInput) ...[
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.overlay.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppColors.overlay.withValues(alpha: 0.10),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Text(
-                            _foodController.text,
-                            style: AppStyles.mainText().copyWith(
-                              fontSize: 15,
-                              color: AppColors.overlay.withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    final afterMessages = index - _messages.length;
 
-                    if (_phase == _DemoPhase.mealLoading) ...[
-                      const SizedBox(height: 24),
-                       Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primaryLight,
-                          ),
-                        ),
-                      ),
-                    ],
+                    if (_isTyping && afterMessages == 0) {
+                      return _typedSoFar.isEmpty
+                          ? _buildBouncingDots()
+                          : _buildTypingBubble();
+                    }
 
-                    if (_caloriesResult != null &&
-                        _phase.index >= _DemoPhase.mealResult.index) ...[
-                      const SizedBox(height: 20),
-                      _buildNutritionCard(_caloriesResult!),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Nice — ${_caloriesResult!.calories.round()} calories, '
-                        '${_caloriesResult!.macros.protein.round()}g protein. '
-                        'That\'s all it takes.',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.overlay.withValues(alpha: 0.9),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
+                    if (_phase.index >= _DemoPhase.voiceIdle.index && _phase != _DemoPhase.done) {
+                      return _buildVoiceSphere();
+                    }
 
-                    if (_phase.index >= _DemoPhase.voiceIdle.index) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        'Now let\'s try logging a set with your voice.',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.overlay.withValues(alpha: 0.9),
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Try saying "3 sets of 10 bench press at 185 pounds"',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.primaryLight.withValues(alpha: 0.45),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-
-                    if (_phase.index >= _DemoPhase.voiceIdle.index &&
-                        _phase != _DemoPhase.done) ...[
-                      const SizedBox(height: 32),
-                      Center(
-                        child: GestureDetector(
-                          onTap: _handleSphereTap,
-                          child: PulsingParticleSphere(
-                            size: 180,
-                            primaryColor: _phase == _DemoPhase.voiceRecording
-                                ? AppColors.recordingPrimary
-                                : AppColors.primary,
-                            secondaryColor: _phase == _DemoPhase.voiceRecording
-                                ? AppColors.recordingSecondary
-                                : AppColors.primaryLight,
-                            accentColor: _phase == _DemoPhase.voiceRecording
-                                ? AppColors.recordingAccent
-                                : AppColors.primaryDark,
-                            highlightColor: _phase == _DemoPhase.voiceRecording
-                                ? AppColors.recordingHighlight
-                                : AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: Text(
-                          _phase == _DemoPhase.voiceProcessing
-                              ? 'Processing...'
-                              : _phase == _DemoPhase.voiceRecording
-                                  ? 'Tap again when finished'
-                                  : 'Tap the sphere to start',
-                          style: AppStyles.mainText().copyWith(
-                            fontSize: 13,
-                            color: AppColors.overlay.withValues(alpha: 0.25),
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    if (_phase == _DemoPhase.voiceProcessing) ...[
-                      const SizedBox(height: 16),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          PulsingParticleSphere(size: 40),
-                        ],
-                      ),
-                    ],
-
-                    if (_phase == _DemoPhase.done && _loggedSets.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      WorkoutResultsDisplay(loggedSets: _loggedSets),
-                    ],
-
-                    if (_phase == _DemoPhase.done) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        'Perfect. You\'re all set.',
-                        style: AppStyles.mainText().copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.overlay.withValues(alpha: 0.9),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-                  ],
+                    return const SizedBox.shrink();
+                  },
                 ),
               ),
             ),
 
-            if (_phase == _DemoPhase.mealInput)
+            if (_phase == _DemoPhase.mealInput && _inputReady)
               Padding(
                 padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPad + 16),
                 child: Row(
@@ -394,10 +380,10 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF111111),
-                          borderRadius: BorderRadius.circular(24),
+                          color: AppColors.overlay.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: AppColors.overlay.withValues(alpha: 0.08),
+                            color: AppColors.overlay.withValues(alpha: 0.06),
                             width: 0.5,
                           ),
                         ),
@@ -405,7 +391,7 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
                           controller: _foodController,
                           style: AppStyles.mainText().copyWith(fontSize: 15),
                           decoration: InputDecoration(
-                            hintText: 'e.g. chicken breast and rice',
+                            hintText: 'e.g. 2 eggs and toast',
                             hintStyle: AppStyles.mainText().copyWith(
                               fontSize: 15,
                               color: AppColors.overlay.withValues(alpha: 0.2),
@@ -426,13 +412,17 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppColors.overlay.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
+                          color: AppColors.overlay.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.overlay.withValues(alpha: 0.06),
+                            width: 0.5,
+                          ),
                         ),
                         child: Icon(
                           Icons.arrow_upward_rounded,
-                          color: AppColors.overlay.withValues(alpha: 0.8),
-                          size: 20,
+                          color: AppColors.overlay.withValues(alpha: 0.6),
+                          size: 18,
                         ),
                       ),
                     ),
@@ -475,44 +465,171 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
     );
   }
 
+  Widget _buildBubble(_ChatBubble item) {
+    final isCoach = item.role == _BubbleRole.coach;
+
+    if (isCoach && item.widget != null) {
+      final contentWidth = MediaQuery.sizeOf(context).width - 40;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: SizedBox(
+          width: contentWidth,
+          child: item.widget,
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Align(
+        alignment: isCoach ? Alignment.centerLeft : Alignment.centerRight,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.78,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isCoach
+                ? Colors.transparent
+                : AppColors.overlay.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: isCoach
+                ? null
+                : Border.all(
+                    color: AppColors.overlay.withValues(alpha: 0.08),
+                    width: 0.5,
+                  ),
+          ),
+          child: Text(
+            item.text!,
+            style: AppStyles.mainText().copyWith(
+              fontSize: isCoach ? _coachFontSize : 15,
+              fontWeight: FontWeight.w500,
+              color: isCoach
+                  ? AppColors.overlay.withValues(alpha: 0.48)
+                  : AppColors.textPrimary,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypingBubble() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.78,
+          ),
+          child: Text(
+            _typedSoFar,
+            style: AppStyles.mainText().copyWith(
+              fontSize: _coachFontSize,
+              fontWeight: FontWeight.w500,
+              color: AppColors.overlay.withValues(alpha: 0.48),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBouncingDots() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: _BouncingDots(),
+      ),
+    );
+  }
+
+  Widget _buildVoiceSphere() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          Center(
+            child: GestureDetector(
+              onTap: _handleSphereTap,
+              child: PulsingParticleSphere(
+                size: 160,
+                primaryColor: _phase == _DemoPhase.voiceRecording
+                    ? AppColors.recordingPrimary
+                    : AppColors.primary,
+                secondaryColor: _phase == _DemoPhase.voiceRecording
+                    ? AppColors.recordingSecondary
+                    : AppColors.primaryLight,
+                accentColor: _phase == _DemoPhase.voiceRecording
+                    ? AppColors.recordingAccent
+                    : AppColors.primaryDark,
+                highlightColor: _phase == _DemoPhase.voiceRecording
+                    ? AppColors.recordingHighlight
+                    : AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _phase == _DemoPhase.voiceRecording
+                ? 'Tap again when finished'
+                : 'Tap to start',
+            style: AppStyles.mainText().copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.overlay.withValues(alpha: 0.2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildNutritionCard(CaloriesResponse result) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.overlay.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: AppColors.overlay.withValues(alpha: 0.06),
           width: 0.5,
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             result.itemName.toUpperCase(),
+            textAlign: TextAlign.center,
             style: AppStyles.mainText().copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.0,
-              color: AppColors.overlay.withValues(alpha: 0.3),
+              color: AppColors.overlay.withValues(alpha: 0.25),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
                 '${result.calories.round()}',
                 style: AppStyles.mainText().copyWith(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.overlay.withValues(alpha: 0.9),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.overlay.withValues(alpha: 0.85),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Text(
                 'cal',
                 style: AppStyles.mainText().copyWith(
@@ -522,7 +639,7 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
               _macroChip('${result.macros.protein.round()}g', 'Protein'),
@@ -549,6 +666,7 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
           children: [
             Text(
               value,
+              textAlign: TextAlign.center,
               style: AppStyles.mainText().copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -558,6 +676,7 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
             const SizedBox(height: 2),
             Text(
               label,
+              textAlign: TextAlign.center,
               style: AppStyles.mainText().copyWith(
                 fontSize: 11,
                 color: AppColors.overlay.withValues(alpha: 0.25),
@@ -565,6 +684,78 @@ class _FeatureDemoScreenState extends State<FeatureDemoScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BouncingDots extends StatefulWidget {
+  @override
+  State<_BouncingDots> createState() => _BouncingDotsState();
+}
+
+class _BouncingDotsState extends State<_BouncingDots>
+    with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _animations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(3, (i) {
+      return AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 500),
+      );
+    });
+    _animations = _controllers.map((c) {
+      return Tween<double>(begin: 0, end: -6).animate(
+        CurvedAnimation(parent: c, curve: Curves.easeInOut),
+      );
+    }).toList();
+
+    for (int i = 0; i < 3; i++) {
+      Future.delayed(Duration(milliseconds: i * 160), () {
+        if (mounted) _controllers[i].repeat(reverse: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 28,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (i) {
+          return AnimatedBuilder(
+            animation: _animations[i],
+            builder: (context, _) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                child: Transform.translate(
+                  offset: Offset(0, _animations[i].value),
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.overlay.withValues(alpha: 0.25),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        }),
       ),
     );
   }

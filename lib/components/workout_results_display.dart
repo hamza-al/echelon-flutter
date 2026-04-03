@@ -3,10 +3,12 @@ import '../styles.dart';
 
 class WorkoutResultsDisplay extends StatelessWidget {
   final List<Map<String, dynamic>> loggedSets;
+  final bool alignCenter;
 
   const WorkoutResultsDisplay({
     super.key,
     required this.loggedSets,
+    this.alignCenter = false,
   });
 
   @override
@@ -32,9 +34,12 @@ class WorkoutResultsDisplay extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment:
+            alignCenter ? CrossAxisAlignment.center : CrossAxisAlignment.stretch,
         children: [
           Text(
             'LOGGED',
+            textAlign: alignCenter ? TextAlign.center : TextAlign.start,
             style: AppStyles.mainText().copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -60,10 +65,13 @@ class WorkoutResultsDisplay extends StatelessWidget {
                   ),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: alignCenter
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
                   children: [
                     Text(
                       exerciseName.toUpperCase(),
+                      textAlign: alignCenter ? TextAlign.center : TextAlign.start,
                       style: AppStyles.mainText().copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -73,6 +81,10 @@ class WorkoutResultsDisplay extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Row(
+                      mainAxisAlignment: alignCenter
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           '${sets.length}',
@@ -84,7 +96,9 @@ class WorkoutResultsDisplay extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: alignCenter
+                              ? CrossAxisAlignment.center
+                              : CrossAxisAlignment.start,
                           children: [
                             Text(
                               'SETS',
@@ -97,6 +111,7 @@ class WorkoutResultsDisplay extends StatelessWidget {
                             ),
                             Text(
                               _getSetSummary(sets[0]),
+                              textAlign: alignCenter ? TextAlign.center : TextAlign.start,
                               style: AppStyles.mainText().copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,

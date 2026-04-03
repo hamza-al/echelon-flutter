@@ -3,6 +3,8 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'dart:io' show Platform;
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk.dart';
+import 'package:tiktok_business_sdk/tiktok_business_sdk_platform_interface.dart';
 import 'styles.dart';
 import 'screens/landing_page.dart';
 import 'screens/main_navigation_screen.dart';
@@ -92,9 +94,11 @@ void main() async {
   await dotenv.load(fileName: ".env");
   final apiKey = dotenv.env['REVENUE_CAT_API_KEY']!;
 
-  
   // Initialize RevenueCat
   await _initRevenueCat(apiKey);
+  
+  // Initialize TikTok Business SDK
+  await _initTikTokSdk();
   
   runApp(
     MultiProvider(
@@ -112,15 +116,32 @@ void main() async {
 }
 
 Future<void> _initRevenueCat(String apiKey) async {
-  // Only set log level in debug mode
-  // Removed for production: await Purchases.setLogLevel(LogLevel.debug);
-  
   if (!Platform.isIOS && !Platform.isAndroid) {
     return;
   }
   
   final configuration = PurchasesConfiguration(apiKey);
   await Purchases.configure(configuration);
+}
+
+Future<void> _initTikTokSdk() async {
+  if (!Platform.isIOS && !Platform.isAndroid) {
+    return;
+  }
+  
+  try {
+    final tiktokSdk = TiktokBusinessSdk();
+    await tiktokSdk.initTiktokBusinessSdk(
+      accessToken: dotenv.env['TIKTOK_ACCESS_TOKEN'] ?? '',
+      appId: dotenv.env['TIKTOK_APP_ID'] ?? '',
+      ttAppId: dotenv.env['TIKTOK_TT_APP_ID'] ?? '',
+      enableAutoIapTrack: true,
+    );
+    
+    tiktokSdk.trackTTEvent(event: EventName.LaunchApp);
+  } catch (e) {
+    debugPrint('TikTok SDK init failed: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -172,7 +193,7 @@ class AppInitializer extends StatelessWidget {
   static const bool kForceOnboarding = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {  
     if (kForceOnboarding) {
       return const LandingPage();
     }

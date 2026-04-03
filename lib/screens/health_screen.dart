@@ -1,10 +1,22 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../styles.dart';
 import '../services/sleep_service.dart';
 import 'nutrition_screen.dart';
+
+/// Calendar day (local) for sleep attribution — one log per night date.
+DateTime _sleepCalendarDay(DateTime d) => DateTime(d.year, d.month, d.day);
+
+SleepEntry? _sleepLogForNight(List<SleepEntry> logs, DateTime nightDay) {
+  final target = _sleepCalendarDay(nightDay);
+  for (final log in logs) {
+    if (_sleepCalendarDay(log.date) == target) return log;
+  }
+  return null;
+}
 
 class HealthScreen extends StatefulWidget {
   final int initialSubTab;
@@ -129,7 +141,10 @@ class _SleepTabState extends State<_SleepTab> {
   }
 
   bool get _hasData => _logs.isNotEmpty;
-  SleepEntry? get _lastLog => _hasData ? _logs.first : null;
+  DateTime get _todaySleep => _sleepCalendarDay(DateTime.now());
+  DateTime get _yesterdaySleep =>
+      _todaySleep.subtract(const Duration(days: 1));
+  SleepEntry? get _yesterdayLog => _sleepLogForNight(_logs, _yesterdaySleep);
 
   String _statusTitle(double hours) {
     if (hours >= 7 && hours <= 9) return 'Well rested';
@@ -149,19 +164,40 @@ class _SleepTabState extends State<_SleepTab> {
 
   double get _weekAvg {
     if (_logs.isEmpty) return 0;
-    final recent = _logs.take(7);
-    return recent.map((l) => l.hours).reduce((a, b) => a + b) / recent.length;
+    var sum = 0.0;
+    var n = 0;
+    for (var i = 0; i < 7; i++) {
+      final log = _sleepLogForNight(_logs, _todaySleep.subtract(Duration(days: i)));
+      if (log != null) {
+        sum += log.hours;
+        n++;
+      }
+    }
+    return n > 0 ? sum / n : 0;
   }
 
   double get _monthAvg {
     if (_logs.isEmpty) return 0;
-    final recent = _logs.take(30);
-    return recent.map((l) => l.hours).reduce((a, b) => a + b) / recent.length;
+    var sum = 0.0;
+    var n = 0;
+    for (var i = 0; i < 30; i++) {
+      final log = _sleepLogForNight(_logs, _todaySleep.subtract(Duration(days: i)));
+      if (log != null) {
+        sum += log.hours;
+        n++;
+      }
+    }
+    return n > 0 ? sum / n : 0;
   }
 
   double get _bestNight {
     if (_logs.isEmpty) return 0;
-    return _logs.map((l) => l.hours).reduce((a, b) => a > b ? a : b);
+    var best = 0.0;
+    for (var i = 0; i < 30; i++) {
+      final log = _sleepLogForNight(_logs, _todaySleep.subtract(Duration(days: i)));
+      if (log != null && log.hours > best) best = log.hours;
+    }
+    return best;
   }
 
   void _openLogSheet() {
@@ -170,6 +206,7 @@ class _SleepTabState extends State<_SleepTab> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _SleepSheet(
+        logNightDate: _yesterdaySleep,
         onSave: (entry) async {
           await SleepService.addLog(entry);
           _loadLogs();
@@ -178,16 +215,14 @@ class _SleepTabState extends State<_SleepTab> {
     );
   }
 
-  void _openEditSheet() {
-    final log = _lastLog;
-    if (log == null) return;
-
+  void _openEditSheet(SleepEntry log) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _SleepSheet(
         isEdit: true,
+        logNightDate: _sleepCalendarDay(log.date),
         editId: log.id,
         initialBedtime: TimeOfDay(hour: log.bedtimeHour, minute: log.bedtimeMinute),
         initialWake: TimeOfDay(hour: log.wakeHour, minute: log.wakeMinute),
@@ -220,8 +255,8 @@ class _SleepTabState extends State<_SleepTab> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Status banner
-                    if (_hasData)
+                    // Status banner (yesterday’s log only — not “latest entry”)
+                    if (_yesterdayLog != null)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -246,7 +281,7 @@ class _SleepTabState extends State<_SleepTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _statusTitle(_lastLog!.hours),
+                                    _statusTitle(_yesterdayLog!.hours),
                                     style: AppStyles.mainText().copyWith(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -255,7 +290,54 @@ class _SleepTabState extends State<_SleepTab> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    _statusSubtitle(_lastLog!.hours),
+                                    _statusSubtitle(_yesterdayLog!.hours),
+                                    style: AppStyles.mainText().copyWith(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    if (_hasData && _yesterdayLog == null)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.nightlight_round,
+                              size: 28,
+                              color: AppColors.primaryLight,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'No log for last night',
+                                    style: AppStyles.mainText().copyWith(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Tap + to log how you slept.',
                                     style: AppStyles.mainText().copyWith(
                                       fontSize: 13,
                                       color: AppColors.textSecondary,
@@ -317,9 +399,9 @@ class _SleepTabState extends State<_SleepTab> {
 
                     const SizedBox(height: 12),
 
-                    // Last night card or prompt
-                    if (_hasData)
-                      _buildLastNightCard()
+                    // Last night card (yesterday only) or prompt
+                    if (_yesterdayLog != null)
+                      _buildLastNightCard(_yesterdayLog!)
                     else
                       GestureDetector(
                         onTap: _openLogSheet,
@@ -343,7 +425,9 @@ class _SleepTabState extends State<_SleepTab> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Tap to log last night',
+                                _hasData
+                                    ? 'Tap to log last night'
+                                    : 'Tap to log your first night',
                                 style: AppStyles.mainText().copyWith(
                                   fontSize: 13,
                                   color: AppColors.primaryLight
@@ -470,8 +554,7 @@ class _SleepTabState extends State<_SleepTab> {
     );
   }
 
-  Widget _buildLastNightCard() {
-    final log = _lastLog!;
+  Widget _buildLastNightCard(SleepEntry log) {
     final hours = log.hours;
     final bedtime = log.bedtimeFormatted;
     final wake = log.wakeFormatted;
@@ -494,7 +577,7 @@ class _SleepTabState extends State<_SleepTab> {
                 ),
               ),
               GestureDetector(
-                onTap: _openEditSheet,
+                onTap: () => _openEditSheet(log),
                 child: Icon(
                   Icons.edit_outlined,
                   size: 16,
@@ -562,17 +645,14 @@ class _SleepTabState extends State<_SleepTab> {
   }
 
   Widget _buildWeekChart() {
-    final now = DateTime.now();
-    final weekday = now.weekday;
-    final weekLogs = List<double?>.filled(7, null);
-
-    for (final log in _logs) {
-      final diff = now.difference(log.date).inDays;
-      if (diff < 7) {
-        final idx = (log.date.weekday - 1) % 7;
-        weekLogs[idx] ??= log.hours;
-      }
-    }
+    final todaySleep = _todaySleep;
+    final mondayOfWeek = todaySleep.subtract(
+      Duration(days: todaySleep.weekday - DateTime.monday),
+    );
+    final weekLogs = List<double?>.generate(7, (i) {
+      final day = mondayOfWeek.add(Duration(days: i));
+      return _sleepLogForNight(_logs, day)?.hours;
+    });
 
     const double chartH = 80;
 
@@ -584,7 +664,8 @@ class _SleepTabState extends State<_SleepTab> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: List.generate(7, (i) {
               final val = weekLogs[i];
-              final isToday = i == (weekday - 1) % 7;
+              final day = mondayOfWeek.add(Duration(days: i));
+              final isToday = day == todaySleep;
               final barH = val != null
                   ? (val / 12.0 * chartH).clamp(6.0, chartH)
                   : 0.0;
@@ -636,7 +717,8 @@ class _SleepTabState extends State<_SleepTab> {
         const SizedBox(height: 10),
         Row(
           children: List.generate(7, (i) {
-            final isToday = i == (weekday - 1) % 7;
+            final day = mondayOfWeek.add(Duration(days: i));
+            final isToday = day == todaySleep;
             return Expanded(
               child: Center(
                 child: Text(
@@ -693,13 +775,12 @@ class _SleepTabState extends State<_SleepTab> {
   }
 
   Widget _buildHeatmap() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final todaySleep = _todaySleep;
 
     final dayMap = <int, double>{};
     for (final log in _logs) {
-      final d = DateTime(log.date.year, log.date.month, log.date.day);
-      final daysAgo = today.difference(d).inDays;
+      final d = _sleepCalendarDay(log.date);
+      final daysAgo = todaySleep.difference(d).inDays;
       if (daysAgo >= 0 && daysAgo < 30) {
         dayMap[daysAgo] ??= log.hours;
       }
@@ -839,6 +920,9 @@ class _SleepTabState extends State<_SleepTab> {
 // ---------------------------------------------------------------------------
 
 class _SleepSheet extends StatefulWidget {
+  /// Calendar date this entry represents (night attributed to this day).
+  /// New logs default to yesterday when null.
+  final DateTime? logNightDate;
   final bool isEdit;
   final String? editId;
   final TimeOfDay? initialBedtime;
@@ -847,6 +931,7 @@ class _SleepSheet extends StatefulWidget {
   final ValueChanged<SleepEntry> onSave;
 
   const _SleepSheet({
+    this.logNightDate,
     this.isEdit = false,
     this.editId,
     this.initialBedtime,
@@ -872,6 +957,16 @@ class _SleepSheetState extends State<_SleepSheet> {
     _bedtime = widget.initialBedtime ?? const TimeOfDay(hour: 23, minute: 0);
     _wakeUp = widget.initialWake ?? const TimeOfDay(hour: 8, minute: 0);
     _qualityIndex = widget.initialQualityIndex ?? 3;
+  }
+
+  String get _nightSheetSubtitle {
+    final nd = widget.logNightDate;
+    if (nd == null) return 'Last night';
+    final cal = _sleepCalendarDay(nd);
+    final y = _sleepCalendarDay(DateTime.now())
+        .subtract(const Duration(days: 1));
+    if (cal == y) return 'Last night';
+    return 'Night of ${DateFormat.MMMd().format(cal)}';
   }
 
   double get _hours {
@@ -967,9 +1062,21 @@ class _SleepSheetState extends State<_SleepSheet> {
   }
 
   void _save() {
+    final DateTime nightDate;
+    if (widget.isEdit) {
+      nightDate = _sleepCalendarDay(
+        widget.logNightDate ?? DateTime.now(),
+      );
+    } else {
+      nightDate = _sleepCalendarDay(
+        widget.logNightDate ??
+            DateTime.now().subtract(const Duration(days: 1)),
+      );
+    }
+
     final entry = SleepEntry(
       id: widget.editId ?? const Uuid().v4(),
-      date: DateTime.now(),
+      date: nightDate,
       hours: _hours,
       quality: _qualityLabels[_qualityIndex],
       qualityIndex: _qualityIndex,
@@ -1015,7 +1122,7 @@ class _SleepSheetState extends State<_SleepSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Last night',
+              _nightSheetSubtitle,
               style: AppStyles.mainText().copyWith(
                 fontSize: 13,
                 color: AppColors.textMuted,

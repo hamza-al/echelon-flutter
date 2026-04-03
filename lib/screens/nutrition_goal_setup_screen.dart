@@ -198,7 +198,6 @@ class _NutritionGoalSetupScreenState extends State<NutritionGoalSetupScreen> {
               
               const Spacer(flex: 2),
               
-              // Continue button
               SizedBox(
                 width: double.infinity,
                 height: 56,
